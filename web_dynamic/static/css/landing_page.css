@@ -1,0 +1,122 @@
+body {
+	font-family: Arial, sans-serif;
+	background-color: #f0f8ff; /* AliceBlue for a bright background */
+	color: #333; /* Text color for readability */
+	margin: 0; /* Remove default margin */
+	padding: 0; /* Remove default padding */
+	padding-top: 50px;
+}
+.navbar {
+	overflow: hidden;
+	background-color: #004080; /* Deep blue color for navbar */
+	position: fixed;
+	top: 0;
+	width: 100%;
+	z-index: 1000;
+	
+}
+.navbar a {
+	float: left;
+	display: block;
+	color: #f2f2f2;
+	text-align: center;
+	padding: 14px 16px;
+	text-decoration: none;
+}
+.navbar a:hover {
+	background-color: #0059b3; /* Slightly lighter blue for hover */
+	color: white;
+}
+.menu-toggle {
+	display: none;
+	font-size: 24px;
+	background: none;
+	border: none;
+	color: #f2f2f2;
+	cursor: pointer;
+	float: right;
+	padding: 14px 16px;
+}
+
+
+#logo-background {
+    position: relative;
+    background-image: url('../images/bookswap_front_page.png');
+    background-size: cover;
+    background-position: center;
+	width: 90%;
+    height: 250px; /* Adjust height as needed */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: white; /* Text color for readability */
+}
+
+.overlay {
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+    padding: 20px;
+    border-radius: 8px;
+}
+
+#logo-background h1 {
+    font-size: 2.5em; /* Adjust font size as needed */
+    margin: 0;
+}
+
+#logo-background p {
+    font-size: 1.2em; /* Adjust font size as needed */
+    margin: 10px 0 0 0;
+}
+
+header, footer {
+	text-align: center;
+	padding: 20px;
+	background-color: #e6f2ff; /* Light blue for header/footer */
+}
+section {
+	padding: 10px;
+	margin: 20px auto;
+	background-color: #ffffff; /* White background for sections */
+	border-radius: 8px; /* Rounded corners for sections */
+	width: 90%;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+h1 {
+	color: #E0FFFF; /* Deep blue for main headings */
+}
+#intro h1 {
+	color: #004080;
+}
+
+h2 {
+	color: #004080;
+}
+h1 {
+	border-bottom: 2px solid #0059b3; /* Underline for H1 headings */
+	padding-bottom: 10px;
+}
+h2 {
+	color: #0073e6; /* Bright blue for secondary headings */
+}
+.button {
+	background-color: #004080;
+	color: white;
+	padding: 10px 20px;
+	text-align: center;
+	text-decoration: none;
+	display: inline-block;
+	border-radius: 4px;
+	font-size: 16px;
+}
+.button:hover {
+	background-color: #0059b3; /* Lighter blue for button hover */
+}
+.social-logo {
+	width: 30px;
+	height: 30px;
+	margin: 5px;
+}
+html {
+    scroll-behavior: smooth;
+}
