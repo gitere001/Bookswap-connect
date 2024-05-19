@@ -31,6 +31,8 @@ class BaseModel:
     def save(self):
         """updates attribute 'updated_at' with current time and date"""
         self.updated_at = datetime.now().strftime(time)
+        models.storage.new(self)
+        models.storage.save()
 
     def to_dict(self):
         new_dict = self.__dict__.copy()
@@ -43,7 +45,5 @@ class BaseModel:
             del new_dict['_sa_instance_state']
         return new_dict
 
-
-b1 = BaseModel()
-print(b1)
-print(b1.to_dict())
+    def delete(self):
+        models.storage.delete(self)
