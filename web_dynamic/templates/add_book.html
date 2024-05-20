@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <meta name="description" content="A form to enter book details.">
+</head>
+<body>
+    <section>
+        <h4>Enter Book Details</h4>
+        <form action="/home/add_book" method="post">
+            <div>
+                <label for="book-title">Book Title</label>
+                <input type="text" id="book-title" name="title" placeholder="Enter book title" required>
+            </div>
+            <div>
+                <label for="author">Author</label>
+                <input type="text" id="author" name="author" placeholder="Enter book's author" required>
+            </div>
+            <div>
+                <label for="genre">Genre</label>
+                <input type="text" id="genre" name="genre" placeholder="Enter book's genre" required>
+            </div>
+            <div>
+                <label for="condition">Condition</label>
+                <input type="text" id="condition" name="condition" placeholder="Enter book's condition" required>
+            </div>
+            <div>
+                <label for="description">Description</label>
+                <input type="text" id="description" name="description" placeholder="Enter description">
+            </div>
+            <div>
+                <input type="submit" value="Submit">
+            </div>
+        </form>
+    </section>
+</body>
+</html>
+
