@@ -10,6 +10,15 @@
     <div class="signup_box">
         <h1>Sign Up</h1>
         <h4>It's free and only takes a minute</h4>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <ul class="flash-messages">
+              {% for category, message in messages %}
+                <li class="{{ category }}">{{ message }}</li>
+              {% endfor %}
+            </ul>
+           {% endif %}
+        {% endwith  %}
         <form action="/sign_up" method="POST">
             <label for="first_name">First Name</label>
             <input type="text" id="first_name" name="first_name" placeholder="Enter your first name" required>
