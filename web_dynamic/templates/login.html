@@ -10,6 +10,15 @@
     <div class="login-container">
         <div class="login-form">
             <h1>Welcome Back</h1>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+              <ul class="flash-messages">
+                {% for category, message in messages %}
+                  <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+              </ul>
+             {% endif %}
+          {% endwith  %}
             <form action="/login" method="POST">
                 <div class="input-group">
                     <label for="email">Email:</label>
