@@ -1,11 +1,30 @@
-from flask import Flask, render_template, request, jsonify, redirect, flash, session
+from flask import Flask, render_template, request, jsonify, redirect, flash
+from flask import current_app
+from flask import session
 from models import storage
 from models.user import User
 from models.book import Book
 from sqlalchemy.exc import IntegrityError
+from utils.text_utils import normalize_text
+from fuzzywuzzy import fuzz
+from utils.file_utils import allowed_file
+import requests
+from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
 app.secret_key = '4769bd47b01107b11132b278b09cb4b61d710edc6fc19aa2'
+app.config['UPLOAD_FOLDER'] = 'uploads/'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
+
+
+def upload_file(file):
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        return filepath
+    return None
 
 
 @app.route('/', strict_slashes=False)
@@ -41,7 +60,7 @@ def sign_up_page():
     return (render_template('sign_up.html'))
 
 
-@app.route('/home')
+@app.route('/home', strict_slashes=False, methods=['GET'])
 def home_page():
     if 'user_id' not in session:
         flash('You need to login first', 'error')
@@ -103,9 +122,25 @@ def add_book():
         description = request.form['description']
         user_id = session['user_id']
 
-        if not title or not author or not condition:
-            flash('Title, author, and condition are required fields', 'error')
-            return redirect('/home/add_book')
+        normalized_title = normalize_text(title)
+        normalized_author = normalize_text(author)
+
+        user_books = storage.find(Book, Book.user_id == user_id)
+
+        for book in user_books:
+            if (fuzz.ratio(normalize_text(book.title), normalized_title) > 90
+                    and normalize_text(book.author) == normalized_author):
+                return jsonify({'message': f'You have already added a similar book: "{book.title}"', 'success': False}), 400
+
+        cover_page = None
+        if 'file' in request.files:
+            file = request.files['file']
+            if file and allowed_file(file.filename):
+                cover_page = upload_file(file)
+                if cover_page is None:
+                    return jsonify({'message': 'Invalid file type. Please upload an image file (png, jpg, jpeg, gif).', 'success': False}), 400
+            else:
+                return jsonify({'message': 'No file part or invalid file type. Please upload an image file (png, jpg, jpeg, gif).', 'success': False}), 400
 
         new_book = Book(
             title=title,
@@ -113,21 +148,19 @@ def add_book():
             genre=genre,
             condition=condition,
             description=description,
-            user_id=user_id
+            user_id=user_id,
+            cover_page=cover_page,
         )
         try:
             storage.new(new_book)
             storage.save()
-            flash('Successfully added a book', 'success')
-            redirect('/home')
+            return jsonify({'message': 'Successfully added a book', 'success': True}), 200
         except IntegrityError:
             storage.rollback()
-            flash('An error occured while adding book', 'error')
-            return redirect('/home/add_book')
+            return jsonify({'message': 'An error occurred while adding the book', 'success': False}), 500
 
-    return (render_template('add_book.html'))
-
+    return render_template('add_book.html')
 
 if __name__ == "__main__":
     storage.reload()
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5002)
