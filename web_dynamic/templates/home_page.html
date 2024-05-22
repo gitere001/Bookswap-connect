@@ -3,10 +3,109 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>home page </title>
+	<title>Home page</title>
+	<meta name="description" content="BookSwap Connect - Swap and share books easily.">
+	<meta name="keywords" content="BookSwap, books, sharing, community">
+	<link rel="stylesheet" href="/static/css/home_page.css">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 </head>
-<body>
-	<a href="/home/add_book">add a new book</a>
+<body id="background-photo" class="overlay">
+	<header>
+		<div class="header-container">
+			<nav class="navbar">
+				<ul>
+					<li class="active"><a href="#">Home</a></li>
+					<li><a href="/home/add_book">Add book</a></li>
+					<li><a href="#">my books</a></li>
+					<li><a href="#">profile</a></li>
+					<li><a href="#">Notifications</a></li>
+					<li><a href="#">Logout</a></li>
+				</ul>
+			</nav>
+			<div class="search-bar">
+				<input type="text" placeholder="search for books..." aria-label="Search">
+				<button type="button">Search</button>
+			</div>
+		</div>
+	</header>
+	<main>
+		<h1 class="title-page">BookSwap Connect</h1>
+		<div class="greeting">Welcome Back James</div>
+		<section class="add-book">
+			<div class="add-book-button">
+				<a href="/home/add_book">Add a new book</a>
+
+			</div>
+
+		</section>
+		<section class="recommended-books">
+			<h2>Recommended Books</h2>
+			<div class="books-list">
+				<div class="book">
+					<h3>healing your inner self</h3>
+					<p>Author: Benjamin Zulu</p>
+				</div>
+				<div class="book">
+					<h3>healing your inner self</h3>
+					<p>Author: Benjamin Zulu</p>
+				</div>
+
+			</div>
+		</section>
+	</main>
+	<footer>
+		<div>
+            <div>
+                <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a>
+            </div>
+            <div class="footer-links">
+                <h4>Follow us on:</h4>
+                <a href="https://facebook.com">
+                    <img src="/static/images/facebook_logo.png" alt="Facebook">
+                </a>
+            </div>
+        </div>
+	</footer>
+	<script>
+		document.getElementById('search-button').addEventListener('click', function(){
+			const query = document.getElementById('search-input').value;
+			if (query) {
+				searchBooks(query);
+			}
+		});
+
+		function searchBooks(query) {
+			fetch(`/search?query=${query}`)
+				.then(response => response.json())
+				.then(data => {
+					displayResults(data);
+				})
+				.catch(error => console.error('Error:', error));
+		}
+
+		function displayResults(books) {
+			const resultsContainer = document.querySelector('.books-list');
+			resultsContainer.innerHTML = '';
+			books.forEach(book => {
+				const bookElement = document.createElement('div');
+				bookElement.className = 'book';
+				bookElement.innerHTML = `
+					<h3>${book.title}</h3>
+					<p>Author: ${book.author}</p>
+					<!-- You can add more details here -->
+					<button onclick="viewBookDetails('${book.id}')">View Details</button>
+				`;
+				resultsContainer.appendChild(bookElement);
+			});
+		}
+
+		function viewBookDetails(bookId) {
+			// You can implement logic to view details of the book with id 'bookId'
+			console.log(`Viewing details of book with id ${bookId}`);
+			// Redirect or open modal or expand details, etc.
+		}
+	</script>
 
 </body>
 </html>

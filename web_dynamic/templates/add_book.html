@@ -3,13 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
+    <title>Add Book</title>
     <meta name="description" content="A form to enter book details.">
+    <link rel="stylesheet" href="/static/css/add_book.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .error { color: red; }
+        .success { color: green; }
+    </style>
 </head>
 <body>
+    <button class="home-button" onclick="window.location.href='/home';">Go to Home</button>
     <section>
         <h4>Enter Book Details</h4>
-        <form action="/home/add_book" method="post">
+
+        <!-- Message display section -->
+        <div id="message"></div>
+
+        <!-- Form to add a book with file upload -->
+        <form id="addBookForm" enctype="multipart/form-data">
             <div>
                 <label for="book-title">Book Title</label>
                 <input type="text" id="book-title" name="title" placeholder="Enter book title" required>
@@ -20,21 +32,52 @@
             </div>
             <div>
                 <label for="genre">Genre</label>
-                <input type="text" id="genre" name="genre" placeholder="Enter book's genre" required>
+                <input type="text" id="genre" name="genre" placeholder="Enter book's genre((e.g., self-help, fiction, drama, science, biography))">
             </div>
             <div>
                 <label for="condition">Condition</label>
-                <input type="text" id="condition" name="condition" placeholder="Enter book's condition" required>
+                <input type="text" id="condition" name="condition" placeholder="Enter book's condition(e.g., new, like new, good, fair, poor etc)" required>
             </div>
             <div>
-                <label for="description">Description</label>
-                <input type="text" id="description" name="description" placeholder="Enter description">
+                <label for="description">Description(optional)</label>
+                <input type="text" id="description" name="description" placeholder="Enter description(e.g., principles of success, habits that lead to lasting success etc)">
             </div>
             <div>
-                <input type="submit" value="Submit">
+                <label for="file">Book Cover Image</label>
+                <input type="file" id="file" name="file" accept="image/*">
+            </div>
+            <div>
+                <button type="submit">Submit</button>
             </div>
         </form>
     </section>
+
+    <script>
+        $(document).ready(function() {
+            $('#addBookForm').on('submit', function(event) {
+                event.preventDefault(); // Prevent the form from submitting via the browser
+
+                var formData = new FormData(this);
+
+                $.ajax({
+                    url: '/home/add_book',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        $('#message').html('<p class="success">' + response.message + '</p>');
+                        if (response.success) {
+                            $('#addBookForm')[0].reset(); // Reset form if submission was successful
+                        }
+                    },
+                    error: function(xhr) {
+                        var response = JSON.parse(xhr.responseText);
+                        $('#message').html('<p class="error">' + response.message + '</p>');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
-
