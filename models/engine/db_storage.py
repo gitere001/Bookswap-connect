@@ -1,5 +1,5 @@
 from os import getenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import scoped_session, sessionmaker
 from models.base_model import Base
 from models.user import User
@@ -57,6 +57,14 @@ class DBStorage:
         sess_factory = sessionmaker(bind=self.__engine, expire_on_commit=False)
         Session = scoped_session(sess_factory)
         self.__session = Session
+
+        inspector = inspect(self.__engine)
+        existing_tables = inspector.get_table_names()
+
+        for clss in classes.values():
+            table_name = clss.__tablename__
+            if table_name not in existing_tables:
+                clss.__table__.create(self.__engine)
 
     def close(self):
         self.__session.remove()
