@@ -10,8 +10,10 @@ class Book(BaseModel, Base):
     condition = Column(String(64), nullable=False)
     description = Column(Text, nullable=True)
     user_id = Column(String(120), ForeignKey('users.id'), nullable=False)
+    cover_path = Column(String(256), nullable=True)
 
-    def __init__(self, title, author, genre, condition, description, user_id):
+    def __init__(self, title, author, genre, condition, description, user_id,
+                 cover_page):
         super().__init__()
         self.title = title
         self.author = author
@@ -19,3 +21,4 @@ class Book(BaseModel, Base):
         self.condition = condition
         self.description = description
         self.user_id = user_id
+        self.cover_path = cover_page
