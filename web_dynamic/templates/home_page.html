@@ -1,61 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Home page</title>
-	<meta name="description" content="BookSwap Connect - Swap and share books easily.">
-	<meta name="keywords" content="BookSwap, books, sharing, community">
-	<link rel="stylesheet" href="/static/css/home_page.css">
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookSwap Connect</title>
+    <meta name="description" content="BookSwap Connect - Swap and share books easily.">
+    <meta name="keywords" content="BookSwap, books, sharing, community">
+    <link rel="stylesheet" href="/static/css/home_page.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body id="background-photo" class="overlay">
-	<header>
-		<div class="header-container">
-			<nav class="navbar">
-				<ul>
-					<li class="active"><a href="#">Home</a></li>
-					<li><a href="/home/add_book">Add book</a></li>
-					<li><a href="#">my books</a></li>
-					<li><a href="#">profile</a></li>
-					<li><a href="#">Notifications</a></li>
-					<li><a href="#">Logout</a></li>
-				</ul>
-			</nav>
-			<div class="search-bar">
-				<input type="text" placeholder="search for books..." aria-label="Search">
-				<button type="button">Search</button>
+    <header>
+        <div class="header-container">
+            <nav class="navbar">
+                <ul>
+                    <li class="navbar__item navbar__item--active"><a href="#">Home</a></li>
+                    <li class="navbar__item"><a href="/home/add_book">Add book</a></li>
+                    <li class="navbar__item"><a href="#">My Books</a></li>
+                    <li class="navbar__item"><a href="#">Profile</a></li>
+                    <li class="navbar__item"><a href="#">Notifications</a></li>
+                    <li class="navbar__item"><a href="#">Logout</a></li>
+                </ul>
+            </nav>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Search for books..." aria-label="Search">
+                <button id="search-button" type="button">Search</button>
+            </div>
+        </div>
+    </header>
+    <main>
+        <h2 class="title-page">Welcome to BookSwap Connect</h2>
+        <section class="add-book">
+            <div class="add-book-button">
+                <a href="/home/add_book">Add a new book</a>
+            </div>
+        </section>
+        <section class="search-container">
+            <div class="search-results">
+                <h2>Search Results</h2>
+                <div class="books-list"></div>
+            </div>
+        </section>
+        <section class="recommended-container">
+            <h2>Recommended Books</h2>
+            <div class="books-list" id="recommended-books">
 			</div>
-		</div>
-	</header>
-	<main>
-		<h1 class="title-page">BookSwap Connect</h1>
-		<div class="greeting">Welcome Back James</div>
-		<section class="add-book">
-			<div class="add-book-button">
-				<a href="/home/add_book">Add a new book</a>
-
-			</div>
-
-		</section>
-		<section class="recommended-books">
-			<h2>Recommended Books</h2>
-			<div class="books-list">
-				<div class="book">
-					<h3>healing your inner self</h3>
-					<p>Author: Benjamin Zulu</p>
-				</div>
-				<div class="book">
-					<h3>healing your inner self</h3>
-					<p>Author: Benjamin Zulu</p>
-				</div>
-
-			</div>
-		</section>
-	</main>
-	<footer>
-		<div>
+        </section>
+    </main>
+    <footer>
+        <div>
             <div>
                 <a href="#">Terms of Service</a> | <a href="#">Privacy Policy</a>
             </div>
@@ -66,46 +59,101 @@
                 </a>
             </div>
         </div>
-	</footer>
-	<script>
-		document.getElementById('search-button').addEventListener('click', function(){
-			const query = document.getElementById('search-input').value;
-			if (query) {
-				searchBooks(query);
-			}
-		});
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('search-button').addEventListener('click', function() {
+                const query = document.getElementById('search-input').value;
+                if (query) {
+                    searchBooks(query);
+                }
+            });
+			addRecommendedBooks();
+        });
 
-		function searchBooks(query) {
-			fetch(`/search?query=${query}`)
-				.then(response => response.json())
-				.then(data => {
-					displayResults(data);
-				})
-				.catch(error => console.error('Error:', error));
+        function searchBooks(query) {
+            fetch(`/search?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayResults(data);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function displayResults(books) {
+            const resultsContainer = document.querySelector('.books-list');
+            resultsContainer.innerHTML = '';
+            books.forEach(book => {
+                const bookElement = document.createElement('div');
+                bookElement.className = 'book';
+                bookElement.innerHTML = `
+                    <h3>${book.title}</h3>
+                    <p>Author: ${book.author}</p>
+                    <button onclick="viewBookDetails('${book.id}')">View Details</button>
+                `;
+                resultsContainer.appendChild(bookElement);
+            });
+        }
+
+		function addRecommendedBooks() {
+			fetch('/recommended_books')
+			.then(response => response.json())
+			.then(data => {
+				displayRecommendedBooks(data);
+			})
+			.catch(error => console.error('Error:', error));
 		}
-
-		function displayResults(books) {
-			const resultsContainer = document.querySelector('.books-list');
-			resultsContainer.innerHTML = '';
+		function displayRecommendedBooks(books) {
+			const RecommendedContainer = document.getElementById('recommended-books');
+			RecommendedContainer.innerHTML = '';
 			books.forEach(book => {
 				const bookElement = document.createElement('div');
 				bookElement.className = 'book';
 				bookElement.innerHTML = `
+				<div class="cover">
+					<img src="${book.cover}" alt="${book.title}">
+				</div>
+				<div class="details">
 					<h3>${book.title}</h3>
 					<p>Author: ${book.author}</p>
-					<!-- You can add more details here -->
 					<button onclick="viewBookDetails('${book.id}')">View Details</button>
+				</div>
 				`;
-				resultsContainer.appendChild(bookElement);
+				RecommendedContainer.appendChild(bookElement);
 			});
 		}
 
-		function viewBookDetails(bookId) {
-			// You can implement logic to view details of the book with id 'bookId'
-			console.log(`Viewing details of book with id ${bookId}`);
-			// Redirect or open modal or expand details, etc.
-		}
-	</script>
+        function viewBookDetails(bookId) {
+            fetch(`/book/${bookId}`)
+			.then(response => response.json())
+			.then(book => {
+				const detailsModal = document.createElement('div');
+				detailsModal.className = 'book-details-modal';
+				detailsModal.innerHTML = `
+				<div class="book-details">
+					<h3>${book.title}</h3>
+					<p>Author: ${book.author}</p>
+					<p>Genre: ${book.genre || 'Not specified'}</p>
+					<p>Condition: ${book.condition}</p>
+					<p>description: ${book.description || 'No description available'}</p>
+					<button onclick="closeDetails()">Close</button>
+				</div>
+				`;
+				const clickeBook = document.querySelector(`[onclick="viewBookDetails('${bookId}')"]`);
+				const rect = clickeBook.getBoundingClientRect();
+				detailsModal.style.top = `${rect.bottom}px`;
+				detailsModal.style.left = `${rect.left}px`;
 
+				document.body.appendChild(detailsModal);
+			})
+			.catch(error => console.error('Error', error));
+        }
+		function closeDetails() {
+			const detailsModal = document.querySelector('.book-details-modal');
+			if (detailsModal) {
+				detailsModal.remove();
+			}
+		}
+    </script>
 </body>
 </html>

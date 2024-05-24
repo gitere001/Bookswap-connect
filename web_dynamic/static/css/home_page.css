@@ -10,7 +10,7 @@ body {
 	color: #333;
 }
 .title-page {
-	text-align: center;
+	text-align: left;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -93,9 +93,10 @@ a:hover {
 }
 main {
 	padding: 20px;
+	flex-wrap: wrap;
 }
 #background-photo {
-	background-image: url('../images/home_page.png');
+	background-image: url('../images/background.png');
 	background-position: 100%;
 }
 .add-book-button a {
@@ -164,3 +165,74 @@ footer a:hover {
     height: 30px;
     margin-right: 10px;
 }
+.search-container {
+	display: flex;
+	justify-content: flex-end;
+	padding-right: 20px;
+}
+.search-results {
+	width: 300px;
+	margin-left: 20px;
+}
+.book-details-modal {
+    position: absolute; /* Change from absolute to fixed */
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ccc;
+	overflow-y: auto;
+	transform: translateX(-50%);
+    padding: 20px;
+    z-index: 1000;
+    max-height: 80vh; /* Limit maximum height to 80% of viewport height */
+    overflow-y: auto; /* Enable vertical scrolling */
+    left: 50%; /* Position modal in center horizontally */
+    transform: translateX(-50%); /* Center the modal */
+    top: 50px; /* Adjust top position as needed */
+}
+
+.book-details {
+    text-align: left;
+    max-width: 300px;
+}
+
+.book-details h3 {
+    margin-top: 0;
+    font-size: 14px;
+}
+
+.book-details p {
+    margin: 0.1px 0;
+}
+
+.book-details button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.book-details button:hover {
+    background-color: #0056b3;
+}
+
+/* Position the modal just below the clicked book button */
+.book-details-modal::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: calc(50% - 20px);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #fff transparent;
+}
+@media (min-width: 768px) {
+    .book-details-modal.fixed {
+        position: fixed;
+        width: 400px; /* Adjust as needed */
+        top: 100px; /* Adjust as needed */
+        right: 50px; /* Adjust as needed */
+    }
+}
+

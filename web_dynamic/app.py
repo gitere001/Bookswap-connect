@@ -11,6 +11,7 @@ from utils.file_utils import allowed_file
 import requests
 from werkzeug.utils import secure_filename
 import os
+import random
 
 app = Flask(__name__)
 app.secret_key = '4769bd47b01107b11132b278b09cb4b61d710edc6fc19aa2'
@@ -130,17 +131,24 @@ def add_book():
         for book in user_books:
             if (fuzz.ratio(normalize_text(book.title), normalized_title) > 90
                     and normalize_text(book.author) == normalized_author):
-                return jsonify({'message': f'You have already added a similar book: "{book.title}"', 'success': False}), 400
+                return jsonify({'message': f'You have already added a similar '
+                                f'book: "{book.title}"', 'success':
+                                    False}), 400
 
-        cover_page = None
+        cover = None
         if 'file' in request.files:
             file = request.files['file']
             if file and allowed_file(file.filename):
-                cover_page = upload_file(file)
-                if cover_page is None:
-                    return jsonify({'message': 'Invalid file type. Please upload an image file (png, jpg, jpeg, gif).', 'success': False}), 400
+                cover = upload_file(file)
+                if cover is None:
+                    return jsonify({'message': 'Invalid file type. Please '
+                                    'upload an image file (png, jpg,'
+                                    'jpeg, gif).', 'success': False}), 400
             else:
-                return jsonify({'message': 'No file part or invalid file type. Please upload an image file (png, jpg, jpeg, gif).', 'success': False}), 400
+                return jsonify({'message': 'No file part or invalid file type.'
+                                ' Please upload an image file'
+                                ' (png, jpg, jpeg, gif).', 'success':
+                                    False}), 400
 
         new_book = Book(
             title=title,
@@ -149,17 +157,84 @@ def add_book():
             condition=condition,
             description=description,
             user_id=user_id,
-            cover_page=cover_page,
+            cover=cover,
         )
         try:
             storage.new(new_book)
             storage.save()
-            return jsonify({'message': 'Successfully added a book', 'success': True}), 200
+            return jsonify({'message': 'Successfully added a book',
+                            'success': True}), 200
         except IntegrityError:
             storage.rollback()
-            return jsonify({'message': 'An error occurred while adding the book', 'success': False}), 500
+            return jsonify({'message': 'An error occurred while adding the'
+                            ' book', 'success': False}), 500
 
     return render_template('add_book.html')
+
+
+@app.route('/search', strict_slashes=False, methods=['GET'])
+def search_books():
+    query = request.args.get('query', '')
+    if not query:
+        return jsonify([]), 200
+
+    normalized_query = normalize_text(query)
+    books_by_title = storage.find(Book, Book.title.ilike
+                                  (f'%{normalized_query}%'))
+    books_by_author = storage.find(Book, Book.author.ilike
+                                   (f'%{normalized_query}%'))
+
+    all_books = {book.id: book for book in books_by_title + books_by_author}
+
+    books_list = [
+        {
+            'id': book.id,
+            'title': book.title,
+            'author': book.author,
+            'genre': book.genre,
+            'condition': book.condition,
+            'description': book.description,
+            'cover': book.cover,
+        }
+        for book in all_books.values()
+    ]
+    return jsonify(books_list), 200
+
+
+@app.route('/book/<book_id>', strict_slashes=False, methods=['GET'])
+def get_book_details(book_id):
+    book = storage.get(Book, book_id)
+    if not book:
+        return jsonify({'error': 'Book not found'}), 404
+    book_details = {
+        'id': book.id,
+        'title': book.title,
+        'author': book.author,
+        'genre': book.genre if book.genre else '',
+        'condition': book.condition,
+        'description': book.description if book.description else '',
+    }
+    return jsonify(book_details), 200
+
+
+@app.route('/recommended_books', strict_slashes=False, methods=['GET'])
+def recommended_books():
+    all_books = storage.find(Book)
+    random_books = random.sample(all_books, 3)
+
+    random_list = []
+    for book in random_books:
+        book_details = {
+            'id': book.id,
+            'title': book.title,
+            'author': book.author,
+            'genre': book.genre if book.genre else '',
+            'condition': book.condition,
+            'description': book.description if book.description else '',
+            }
+        random_list.append(book_details)
+    return jsonify(random_list)
+
 
 if __name__ == "__main__":
     storage.reload()
