@@ -15,11 +15,10 @@
             <nav class="navbar">
                 <ul>
                     <li class="navbar__item navbar__item--active"><a href="#">Home</a></li>
-                    <li class="navbar__item"><a href="/home/add_book">Add book</a></li>
                     <li class="navbar__item"><a href="#">My Books</a></li>
                     <li class="navbar__item"><a href="#">Profile</a></li>
                     <li class="navbar__item"><a href="#">Notifications</a></li>
-                    <li class="navbar__item"><a href="#">Logout</a></li>
+                    <li class="navbar__item"><a href="/logout">Logout</a></li>
                 </ul>
             </nav>
             <div class="search-bar">
@@ -34,17 +33,25 @@
             <div class="add-book-button">
                 <a href="/home/add_book">Add a new book</a>
             </div>
+            <div class="view-swap-requests">
+                <a href="/home/swap_requests">View Swap Requests</a>
+            </div>
         </section>
+        <section class="browser-available books">
+            <div class="available-books">
+                <a href="/home/available_books">browse available books</a>
+            </div>
+        </section>
+
         <section class="search-container">
             <div class="search-results">
-                <h2>Search Results</h2>
-                <div class="books-list"></div>
+                <div class="search-books-list" id="search-books"></div>
             </div>
         </section>
         <section class="recommended-container">
             <h2>Recommended Books</h2>
-            <div class="books-list" id="recommended-books">
-			</div>
+            <div class="recommended-books-list" id="recommended-books">
+            </div>
         </section>
     </main>
     <footer>
@@ -68,7 +75,7 @@
                     searchBooks(query);
                 }
             });
-			addRecommendedBooks();
+            addRecommendedBooks();
         });
 
         function searchBooks(query) {
@@ -81,79 +88,92 @@
         }
 
         function displayResults(books) {
-            const resultsContainer = document.querySelector('.books-list');
+            const resultsContainer = document.querySelector('.search-results');
             resultsContainer.innerHTML = '';
-            books.forEach(book => {
+            if (books.length === 0) {
+                resultsContainer.innerHTML = `<h3>No books found. Please try another search term.</h3>`;
+
+            }books.forEach(book => {
                 const bookElement = document.createElement('div');
-                bookElement.className = 'book';
+                bookElement.className = 'search-book';
                 bookElement.innerHTML = `
-                    <h3>${book.title}</h3>
-                    <p>Author: ${book.author}</p>
-                    <button onclick="viewBookDetails('${book.id}')">View Details</button>
+                    <div class="cover">
+                        <img src="/static/images/bookswap_front_page.png" alt="${book.title}">
+                    </div>
+                    <div class="details">
+                        <h3>${book.title}</h3>
+                        <p>Author: ${book.author}</p>
+                        <button onclick="viewBookDetails('${book.id}')">View Details</button>
+                        <a href="/home/request_swap?book_id=${book.id}" class="swap-button">Request Swap</a>
+                    </div>
                 `;
                 resultsContainer.appendChild(bookElement);
             });
         }
 
-		function addRecommendedBooks() {
-			fetch('/recommended_books')
-			.then(response => response.json())
-			.then(data => {
-				displayRecommendedBooks(data);
-			})
-			.catch(error => console.error('Error:', error));
-		}
-		function displayRecommendedBooks(books) {
-			const RecommendedContainer = document.getElementById('recommended-books');
-			RecommendedContainer.innerHTML = '';
-			books.forEach(book => {
-				const bookElement = document.createElement('div');
-				bookElement.className = 'book';
-				bookElement.innerHTML = `
-				<div class="cover">
-					<img src="${book.cover}" alt="${book.title}">
-				</div>
-				<div class="details">
-					<h3>${book.title}</h3>
-					<p>Author: ${book.author}</p>
-					<button onclick="viewBookDetails('${book.id}')">View Details</button>
-				</div>
-				`;
-				RecommendedContainer.appendChild(bookElement);
-			});
-		}
+
+        function addRecommendedBooks() {
+            fetch('/recommended_books')
+            .then(response => response.json())
+            .then(data => {
+                displayRecommendedBooks(data);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function displayRecommendedBooks(books) {
+            const recommendedContainer = document.getElementById('recommended-books');
+            recommendedContainer.innerHTML = '';
+            books.forEach(book => {
+                const bookElement = document.createElement('div');
+                bookElement.className = 'recommended-book';
+                bookElement.innerHTML = `
+                    <div class="cover">
+                        <img src="/static/images/bookswap_front_page.png" alt="${book.title}">
+                    </div>
+                    <div class="details">
+                        <h3>${book.title}</h3>
+                        <p>Author: ${book.author}</p>
+                        <button onclick="viewBookDetails('${book.id}')">View Details</button>
+                        <a href="/home/request_swap?book_id=${book.id}" class="swap-button">Request Swap</a>
+                    </div>
+                `;
+                recommendedContainer.appendChild(bookElement);
+            });
+        }
 
         function viewBookDetails(bookId) {
             fetch(`/book/${bookId}`)
-			.then(response => response.json())
-			.then(book => {
-				const detailsModal = document.createElement('div');
-				detailsModal.className = 'book-details-modal';
-				detailsModal.innerHTML = `
-				<div class="book-details">
-					<h3>${book.title}</h3>
-					<p>Author: ${book.author}</p>
-					<p>Genre: ${book.genre || 'Not specified'}</p>
-					<p>Condition: ${book.condition}</p>
-					<p>description: ${book.description || 'No description available'}</p>
-					<button onclick="closeDetails()">Close</button>
-				</div>
-				`;
-				const clickeBook = document.querySelector(`[onclick="viewBookDetails('${bookId}')"]`);
-				const rect = clickeBook.getBoundingClientRect();
-				detailsModal.style.top = `${rect.bottom}px`;
-				detailsModal.style.left = `${rect.left}px`;
+            .then(response => response.json())
+            .then(book => {
+                const detailsModal = document.createElement('div');
+                detailsModal.className = 'book-details-modal';
+                detailsModal.innerHTML = `
+                    <div class="book-details">
+                        <h3>${book.title}</h3>
+                        <p>Author: ${book.author}</p>
+                        <p>Genre: ${book.genre || 'Not specified'}</p>
+                        <p>Condition: ${book.condition}</p>
+                        <p>Description: ${book.description || 'No description available'}</p>
+                        <button onclick="closeDetails()">Close</button>
+                    </div>
+                `;
+                const clickedBook = document.querySelector(`[onclick="viewBookDetails('${bookId}')"]`);
+                const rect = clickedBook.getBoundingClientRect();
+                detailsModal.style.top = `${rect.bottom}px`;
+                detailsModal.style.left = `${rect.left}px`;
 
-				document.body.appendChild(detailsModal);
-			})
-			.catch(error => console.error('Error', error));
+                document.body.appendChild(detailsModal);
+            })
+            .catch(error => console.error('Error', error));
         }
-		function closeDetails() {
-			const detailsModal = document.querySelector('.book-details-modal');
-			if (detailsModal) {
-				detailsModal.remove();
-			}
-		}
+
+        function closeDetails() {
+            const detailsModal = document.querySelector('.book-details-modal');
+            if (detailsModal) {
+                detailsModal.remove();
+            }
+        }
     </script>
 </body>
 </html>

@@ -46,6 +46,7 @@ a:hover {
 	text-align: center;
 	font-size: x-large;
 }
+
 .navbar ul {
 	display: flex;
 }
@@ -99,40 +100,142 @@ main {
 	background-image: url('../images/background.png');
 	background-position: 100%;
 }
-.add-book-button a {
-	padding: 10px 20px;
+
+.available-books a {
+	padding: 5px 5px;
 	background-color: #28a745;
 	color: #fff;
 	text-decoration: none;
 	border-radius: 4px;
 	cursor: pointer;
 	display: inline-block;
+	padding-top: 5px;
+}
+.available-books a:hover {
+	background-color: #218838;
+}
+
+
+.add-book-button a {
+	padding: 5px 10px;
+	background-color: #28a745;
+	color: #fff;
+	text-decoration: none;
+	border-radius: 4px;
+	cursor: pointer;
+	display: inline-block;
+	margin-bottom: 5px;
+}
+.view-swap-requests a {
+
+	padding: 5px 10px;
+	background-color: #28a745;
+	color: #fff;
+	text-decoration: none;
+	border-radius: 4px;
+	cursor: pointer;
+	display: inline-block;
+	margin-bottom: 5px;
+	color: white;
 }
 .add-book-button a:hover {
 	background-color: #218838;
 }
-.recommended-books {
-	margin-top: 20px;
+.view-swap-requests a:hover {
+	background-color: #218838;
 }
-.book-list {
+.search-container {
+	margin-left: 600px;
+	clear: both;
+}
+
+.recommended-container {
+	margin-top: 10px;
+}
+.search-books-list,
+.recommended-books-list {
 	display: flex;
 	flex-wrap: wrap;
 }
-.book h3 {
-	font-size: 18px;
+
+
+.recommended-book {
+	display: flex;
+	margin-bottom: 20px;
+	background-color: #f9f9f9;
+	border-radius: 5px;
+	overflow: hidden;
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+	width: calc(50% - 20px);
+	margin-right: 20px;
+}
+.search-book {
+	width: 100%;
+	display: flex;
+	margin-bottom: 20px;
+	background-color: #f9f9f9;
+	border-radius: 5px;
+	overflow: hidden;
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+	margin-right: 20px;
+
+}
+.search-book:nth-child(2n),
+.recommended-book:nth-child(2n) {
+	margin-right: 0;
+}
+.search-book .cover,
+.recommended-book .cover {
+	width: 80px;
+	flex: 0 0 80px;
+	position: relative;
+	overflow: hidden;
+}
+.search-book .cover img,
+.recommended-book .cover img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+.search-book .details,
+.recommended-book .details {
+	padding: 5px;
+	flex: 1;
+}
+.search-book h3,
+.recommended-book h3 {
+	font-size: 1.2em;
+	margin-top: 0;
 	margin-bottom: 5px;
 }
-.book button {
-	padding: 8px 16px;
+.search-book p,
+.recommended-book p {
+	margin: 5px 0;
+}
+.search-book button,
+.recommended-book button {
+	padding: 3px 6px;
 	background-color: #007bff;
 	color: #fff;
 	border: none;
 	cursor: pointer;
-	border-radius: 4px;
+	font-size: 0.9em;
+	border-radius: 3px;
 }
-.book button:hover {
+.swap-button {
+	padding: 3px 6px;
+	background-color: #126b06;
+	color: #fff;
+	border: none;
+	cursor: pointer;
+	font-size: 0.9em;
+	border-radius: 3px;
+}
+.search-book button:hover,
+.recommended-book button:hover {
 	background-color: #0056b3;
 }
+
 footer {
 	background-color: #d3dde7;;
 	padding: 20px;
@@ -165,15 +268,7 @@ footer a:hover {
     height: 30px;
     margin-right: 10px;
 }
-.search-container {
-	display: flex;
-	justify-content: flex-end;
-	padding-right: 20px;
-}
-.search-results {
-	width: 300px;
-	margin-left: 20px;
-}
+
 .book-details-modal {
     position: absolute; /* Change from absolute to fixed */
     background-color: #fff;
@@ -235,4 +330,3 @@ footer a:hover {
         right: 50px; /* Adjust as needed */
     }
 }
-
