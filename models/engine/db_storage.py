@@ -4,10 +4,12 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from models.base_model import Base
 from models.user import User
 from models.book import Book
+from models.swap_request import SwapRequest
 
 classes = {
     "User": User,
     "Book": Book,
+    "SwapRequest": SwapRequest,
 }
 
 

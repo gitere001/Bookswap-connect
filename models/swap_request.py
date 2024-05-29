@@ -1,5 +1,5 @@
 from models.base_model import BaseModel, Base
-from sqlalchemy import Column, String, ForeignKey, Enum
+from sqlalchemy import Column, String, ForeignKey, Enum, Text
 
 
 class SwapRequest(BaseModel, Base):
@@ -11,3 +11,13 @@ class SwapRequest(BaseModel, Base):
                              nullable=False)
     status = Column(Enum('pending', 'accepted', 'declined',
                          name='request_status'), default='pending')
+    message = Column(Text, nullable=True)
+
+    def __init__(self, requester_id, requested_book_id, offered_book_id,
+                 status, message):
+        super().__init__()
+        self.requester_id = requester_id
+        self.requested_book_id = requested_book_id
+        self.offered_book_id = offered_book_id
+        self.status = status
+        self.message = message
