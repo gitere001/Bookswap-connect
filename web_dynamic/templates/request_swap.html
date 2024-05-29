@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Swap</title>
+    <meta name="description" content="Request a book swap on BookSwap Connect">
+    <meta name="keywords" content="BookSwap, books, sharing, community">
+    <link rel="stylesheet" href="/static/css/request_swap.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <button class="home-button" onclick="window.location.href='/home';">Go to Home</button>
+    <main>
+        <!-- Book details section -->
+        <section id="book-details">
+            <h2 class="header">Book you are interested in</h2>
+            <div id="book-info"></div>
+        </section>
+
+        <!-- User's books dropdown section -->
+        <section id="user-books">
+            <h2 class="header">Choose one of your books to swap</h2>
+            <select id="user-books-dropdown"></select>
+            <div id="no-books-message" style="display: none;">
+                <p>You have no books to swap. <a href="/home/add_book" id="add-book-link">Add a book</a></p>
+            </div>
+        </section>
+
+        <!-- Message section -->
+        <section id="message-section">
+            <h2>Write a message</h2>
+            <textarea id="swap-message" rows="4" placeholder="Write your message here..."></textarea>
+        </section>
+
+        <!-- Submit button -->
+        <section id="submit-section">
+            <button id="submit-swap-request">Submit Swap Request</button>
+        </section>
+
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookId = urlParams.get('book_id');
+
+            // Fetch and display the details of the selected book
+            fetch(`/book/${bookId}`)
+                .then(response => response.json())
+                .then(book => {
+                    const bookInfo = document.getElementById('book-info');
+                    bookInfo.innerHTML = `
+                        <h3>${book.title}</h3>
+                        <p>Author: ${book.author}</p>
+                        <p>Genre: ${book.genre || 'Not specified'}</p>
+                        <p>Condition: ${book.condition}</p>
+                        <p>Description: ${book.description || 'No description available'}</p>
+                    `;
+                })
+                .catch(error => console.error('Error fetching book details:', error));
+
+            // Fetch and populate the user's books in the dropdown
+            fetch('/user_books')
+                .then(response => response.json())
+                .then(books => {
+                    const userBooksDropdown = document.getElementById('user-books-dropdown');
+                    const noBooksMessage = document.getElementById('no-books-message');
+
+                    if (books.length === 0) {
+                        // If no books, show the no books message and hide the dropdown
+                        userBooksDropdown.style.display = 'none';
+                        noBooksMessage.style.display = 'block';
+                    } else {
+                        // Populate the dropdown with the user's books
+                        books.forEach(book => {
+                            const option = document.createElement('option');
+                            option.value = book.id;
+                            option.text = book.title;
+                            userBooksDropdown.add(option);
+                        });
+                        userBooksDropdown.style.display = 'block';
+                        noBooksMessage.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error fetching user books:', error));
+
+            // Handle swap request submission
+            document.getElementById('submit-swap-request').addEventListener('click', function() {
+                const selectedBookId = document.getElementById('user-books-dropdown').value;
+                const message = document.getElementById('swap-message').value;
+
+                const requestData = {
+                    requested_book_id: bookId,
+                    offered_book_id: selectedBookId,
+                    message: message
+                };
+
+                fetch('/submit_swap_request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData),
+                })
+                .then(response => response.json())
+                .then(data => {
+					if (data.error) {
+						alert('Error: ' + data.error);
+					} else {
+						alert('Swap request submitted successfully');
+						document.getElementById('swap-message').value = '';
+						document.getElementById('user-books-dropdown'.selectIndex = 0);
+						window.location.href = '/home';
+					}
+                })
+                .catch(error => console.error('Error submitting swap request:', error));
+            });
+        });
+    </script>
+</body>
+</html>

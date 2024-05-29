@@ -1,0 +1,63 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Global styling */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f0f0f0;
+}
+
+#swap-records-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#swap-records-table th,
+#swap-records-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+#swap-records-table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+@media (max-width: 600px) {
+    #book-details {
+        font-size: 16px;
+    }
+
+    #user-books-dropdown,
+    #swap-message,
+    #submit-swap-request {
+        font-size: 14px;
+    }
+}
+
+.home-button {
+	border-radius: 4px;
+	position: relative;
+	top: 20px;
+	left: 20px;
+	padding: 10px 20px;
+	background-color: rgb(32, 167, 75);
+	border: none;
+	cursor: pointer;
+	font-size: 16px;
+	transition: background-color 0.3s ease;
+	margin-bottom: 40px;
+
+}
+.home-button:hover {
+	background-color: rgb(14, 66, 23);
+}
+.header {
+	color: hsl(227, 89%, 36%);
+	margin-left: 20px;
+}

@@ -1,0 +1,133 @@
+/* Reset default browser styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Global styling */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f0f0f0;
+}
+
+.header {
+	color: hsl(227, 89%, 36%);
+}
+
+main {
+    max-width: 800px;
+    margin: 20px auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+}
+
+#book-info h3 {
+    font-size: 18px;
+    margin-top: 0;
+}
+
+#book-info p {
+    margin-bottom: 10px;
+}
+
+#user-books-dropdown {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+#swap-message {
+    width: 100%;
+    padding: 8px;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+#submit-swap-request {
+    background-color: #156326;
+    color: #fff;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+	margin-bottom: 10px;
+}
+
+#swap-records-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#swap-records-table th,
+#swap-records-table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+#swap-records-table th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+#no-books-message {
+    padding: 10px;
+    background-color: #ffe4e1;
+    border: 1px solid #f08080;
+    border-radius: 4px;
+    margin-top: 10px;
+    display: none;
+}
+
+#no-books-message p {
+    margin: 0;
+}
+
+#add-book-link {
+    color: #f08080;
+    text-decoration: underline;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    #book-details {
+        font-size: 16px;
+    }
+
+    #user-books-dropdown,
+    #swap-message,
+    #submit-swap-request {
+        font-size: 14px;
+    }
+}
+
+.home-button {
+	border-radius: 4px;
+	position: relative;
+	top: 20px;
+	left: 20px;
+	padding: 10px 20px;
+	background-color: rgb(32, 167, 75);
+	border: none;
+	cursor: pointer;
+	font-size: 16px;
+	transition: background-color 0.3s ease;
+
+}
+.home-button:hover {
+	background-color: rgb(14, 66, 23);
+}

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swap History - BookSwap Connect</title>
+    <link rel="stylesheet" href="/static/css/swap_history.css">
+</head>
+<body>
+	<button class="home-button" onclick="window.location.href='/home';">Go to Home</button>
+	<section id="swap-records">
+		<h3 class=header >Swap History</h3>
+		<table id="swap-records-table">
+			<thead>
+				<tr>
+					<th>Requested Date</th>
+					<th>Requested Book Title</th>
+					<th>Offered Book Title</th>
+					<th>Status</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody id="swap-records-list">
+				<!-- Records will be inserted here -->
+			</tbody>
+		</table>
+	</section>
+	<script>
+		fetchAndDisplaySwapRecords();
+
+            // Function to fetch and display swap records
+            function fetchAndDisplaySwapRecords() {
+                const recordsList = document.getElementById('swap-records-list');
+                recordsList.innerHTML = ''; // Clear existing records
+
+                fetch('/swap_records')
+                    .then(response => response.json())
+                    .then(records => {
+                        records.forEach(record => {
+                            const row = document.createElement('tr');
+
+                            // Add table cells for record details
+                            row.innerHTML = `
+                                <td>${record.requested_date}</td>
+                                <td>${record.requested_book_title}</td>
+                                <td>${record.offered_book_title}</td>
+                                <td>${record.status}</td>
+                                <td><button class="cancel-request-btn" data-request-id="${record.id}">Cancel</button></td>
+                            `;
+
+                            // Add click event listener to cancel button
+                            const cancelBtn = row.querySelector('.cancel-request-btn');
+                            cancelBtn.addEventListener('click', function() {
+                                const requestId = this.getAttribute('data-request-id');
+								if (requestId) {
+									cancelSwapRequest(requestId);
+								} else {
+									console.error('Request ID is undefined');
+								}
+                            });
+
+                            recordsList.appendChild(row);
+                        });
+                    })
+                    .catch(error => console.error('Error fetching swap records:', error));
+            }
+
+            // Function to cancel swap request
+            function cancelSwapRequest(requestId) {
+                if (!confirm('Are you sure you want to cancel this swap request?')) {
+                    return;
+                }
+
+                fetch(`/cancel_swap_request/${requestId}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Swap request cancelled successfully');
+                    // Optionally, update the UI or reload swap records
+                    fetchAndDisplaySwapRecords(); // Fetch and display records again
+                })
+                .catch(error => console.error('Error cancelling swap request:', error));
+            }
+	</script>
+
+</body>
+</html>

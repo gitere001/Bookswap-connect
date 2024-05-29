@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Books</title>
+    <link rel="stylesheet" href="/static/css/available_books.css">
+</head>
+<body>
+    <button class="home-button" onclick="window.location.href='/home';">Go to Home</button>
+    <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Search for books...">
+        <button id="search-button">Search</button>
+    </div>
+    <section class="search-container">
+        <div class="search-results">
+            <h2 id="search-results-header"></h2>
+            <div class="book-list" id="search-books"></div>
+            <p id="search-no-results"></p>
+        </div>
+    </section>
+    <div class="book-list" id="book-list"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('search-button').addEventListener('click', function() {
+                const query = document.getElementById('search-input').value;
+                if (query) {
+                    searchBooks(query);
+                } else {
+                    fetchBooks();
+                }
+            });
+            fetchBooks();
+        });
+
+        function fetchBooks() {
+            fetch('/fetch_all_books')
+                .then(response => response.json())
+                .then(data => {
+                    displayBooks(data, false);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function searchBooks(query) {
+            fetch(`/search?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayBooks(data, true);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function displayBooks(books, isSearchResults) {
+            const bookList = document.getElementById('book-list');
+            const searchBookList = document.getElementById('search-books');
+            const resultsHeader = document.getElementById('search-results-header');
+            const noResultsMessage = document.getElementById('search-no-results');
+
+            bookList.style.display = isSearchResults ? 'none' : 'block';
+            searchBookList.style.display = isSearchResults ? 'block' : 'none';
+
+            if (isSearchResults) {
+                if (books.length > 0) {
+                    resultsHeader.textContent = 'Search Results';
+                    noResultsMessage.textContent = '';
+                } else {
+                    resultsHeader.textContent = 'Search Results';
+                    noResultsMessage.textContent = 'No results found';
+                }
+            } else {
+                resultsHeader.textContent = '';
+                noResultsMessage.textContent = '';
+            }
+
+            if (isSearchResults) {
+                searchBookList.innerHTML = '';
+                books.forEach(book => {
+                    const bookElement = document.createElement('div');
+                    bookElement.className = 'available_book';
+                    bookElement.innerHTML = `
+                        <div class="cover">
+                            <img src="/static/images/bookswap_front_page.png">
+                        </div>
+                        <div class="details">
+                            <h3>${book.title}</h3>
+                            <p>Author: ${book.author}</p>
+                            <button onclick="viewBookDetails('${book.id}')">View Details</button>
+							<a href="/home/request_swap?book_id=${book.id}" class="swap-button">Request Swap</a>
+                        </div>
+                    `;
+                    searchBookList.appendChild(bookElement);
+                });
+            } else {
+                bookList.innerHTML = '';
+                books.forEach(book => {
+                    const bookElement = document.createElement('div');
+                    bookElement.className = 'available_book';
+                    bookElement.innerHTML = `
+                    <div class="cover">
+                        <img src="/static/images/bookswap_front_page.png" alt="${book.title}">
+                    </div>
+                        <div class="details">
+                            <h3>${book.title}</h3>
+                            <p>Author: ${book.author}</p>
+                            <button onclick="viewBookDetails('${book.id}')">View Details</button>
+							<a href="/home/request_swap?book_id=${book.id}" class="swap-button">Request Swap</a>
+                        </div>
+                    `;
+                    bookList.appendChild(bookElement);
+                });
+            }
+        }
+
+        function viewBookDetails(bookId) {
+            fetch(`/book/${bookId}`)
+                .then(response => response.json())
+                .then(book => {
+                    const detailsModal = document.createElement('div');
+                    detailsModal.className = 'book-details-modal';
+                    detailsModal.innerHTML = `
+                        <div class="book-details">
+                            <h3>${book.title}</h3>
+                            <p>Author: ${book.author}</p>
+                            <p>Genre: ${book.genre || 'Not specified'}</p>
+                            <p>Condition: ${book.condition}</p>
+                            <p>Description: ${book.description || 'No description available'}</p>
+                            <button onclick="closeDetails()">Close</button>
+                        </div>
+                    `;
+                    document.body.appendChild(detailsModal); // Add modal to the body
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function closeDetails() {
+            const detailsModal = document.querySelector('.book-details-modal');
+            if (detailsModal) {
+                detailsModal.remove();
+            }
+        }
+    </script>
+
+</body>
+</html>
