@@ -1,5 +1,5 @@
 from models.base_model import BaseModel, Base
-from sqlalchemy import Column, String, Text, ForeignKey
+from sqlalchemy import Column, String, Text, ForeignKey, Boolean
 
 
 class Book(BaseModel, Base):
@@ -11,9 +11,11 @@ class Book(BaseModel, Base):
     description = Column(Text, nullable=True)
     user_id = Column(String(120), ForeignKey('users.id'), nullable=False)
     cover = Column(String(256), nullable=True)
+    location = Column(String(128), nullable=False)
+    swap_request_swapped = Column(Boolean, default=False)
 
     def __init__(self, title, author, genre, condition, description, user_id,
-                 cover):
+                 cover, swapped, location):
         super().__init__()
         self.title = title
         self.author = author
@@ -22,3 +24,5 @@ class Book(BaseModel, Base):
         self.description = description
         self.user_id = user_id
         self.cover = cover
+        self.location = location
+        self.swap_request_swapped = swapped

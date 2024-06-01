@@ -27,18 +27,10 @@
             </div>
         </section>
 
-        <!-- Message section -->
-        <section id="message-section">
-            <h2>Write a message</h2>
-            <textarea id="swap-message" rows="4" placeholder="Write your message here..."></textarea>
-        </section>
-
         <!-- Submit button -->
         <section id="submit-section">
             <button id="submit-swap-request">Submit Swap Request</button>
         </section>
-
-
     </main>
 
     <script>
@@ -89,12 +81,15 @@
             // Handle swap request submission
             document.getElementById('submit-swap-request').addEventListener('click', function() {
                 const selectedBookId = document.getElementById('user-books-dropdown').value;
-                const message = document.getElementById('swap-message').value;
+
+                if (!selectedBookId) {
+                    alert('Please select a book to offer for swap.');
+                    return;
+                }
 
                 const requestData = {
                     requested_book_id: bookId,
                     offered_book_id: selectedBookId,
-                    message: message
                 };
 
                 fetch('/submit_swap_request', {
@@ -106,14 +101,12 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-					if (data.error) {
-						alert('Error: ' + data.error);
-					} else {
-						alert('Swap request submitted successfully');
-						document.getElementById('swap-message').value = '';
-						document.getElementById('user-books-dropdown'.selectIndex = 0);
-						window.location.href = '/home';
-					}
+                    if (data.success) {
+                        alert('Swap request submitted successfully');
+                        window.location.href = '/home';
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to submit swap request'));
+                    }
                 })
                 .catch(error => console.error('Error submitting swap request:', error));
             });

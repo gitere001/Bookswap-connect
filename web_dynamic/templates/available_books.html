@@ -15,6 +15,7 @@
     <section class="search-container">
         <div class="search-results">
             <h2 id="search-results-header"></h2>
+            <button id="back-button" style="display:none;" onclick="goBack()">Back</button>
             <div class="book-list" id="search-books"></div>
             <p id="search-no-results"></p>
         </div>
@@ -56,9 +57,11 @@
             const searchBookList = document.getElementById('search-books');
             const resultsHeader = document.getElementById('search-results-header');
             const noResultsMessage = document.getElementById('search-no-results');
+            const backButton = document.getElementById('back-button');
 
             bookList.style.display = isSearchResults ? 'none' : 'block';
             searchBookList.style.display = isSearchResults ? 'block' : 'none';
+            backButton.style.display = isSearchResults ? 'block' : 'none';
 
             if (isSearchResults) {
                 if (books.length > 0) {
@@ -73,73 +76,53 @@
                 noResultsMessage.textContent = '';
             }
 
-            if (isSearchResults) {
-                searchBookList.innerHTML = '';
-                books.forEach(book => {
-                    const bookElement = document.createElement('div');
-                    bookElement.className = 'available_book';
-                    bookElement.innerHTML = `
-                        <div class="cover">
-                            <img src="/static/images/bookswap_front_page.png">
-                        </div>
-                        <div class="details">
-                            <h3>${book.title}</h3>
-                            <p>Author: ${book.author}</p>
-                            <button onclick="viewBookDetails('${book.id}')">View Details</button>
-							<a href="/home/request_swap?book_id=${book.id}" class="swap-button">Request Swap</a>
-                        </div>
-                    `;
-                    searchBookList.appendChild(bookElement);
-                });
-            } else {
-                bookList.innerHTML = '';
-                books.forEach(book => {
-                    const bookElement = document.createElement('div');
-                    bookElement.className = 'available_book';
-                    bookElement.innerHTML = `
+            const targetList = isSearchResults ? searchBookList : bookList;
+            targetList.innerHTML = '';
+            books.forEach(book => {
+                const bookElement = document.createElement('div');
+                bookElement.className = 'available_book';
+                bookElement.innerHTML = `
                     <div class="cover">
                         <img src="/static/images/bookswap_front_page.png" alt="${book.title}">
                     </div>
-                        <div class="details">
-                            <h3>${book.title}</h3>
-                            <p>Author: ${book.author}</p>
-                            <button onclick="viewBookDetails('${book.id}')">View Details</button>
-							<a href="/home/request_swap?book_id=${book.id}" class="swap-button">Request Swap</a>
-                        </div>
-                    `;
-                    bookList.appendChild(bookElement);
-                });
-            }
+                    <div class="details">
+                        <h3>${book.title}</h3>
+                        <p>Author: ${book.author}</p>
+                        <button onclick="viewBookDetails('${book.id}', this)">View Details</button>
+                        <a href="/home/request_swap?book_id=${book.id}" class="swap-button">Request Swap</a>
+                        <div class="book-details"></div>
+                    </div>
+                `;
+                targetList.appendChild(bookElement);
+            });
         }
 
-        function viewBookDetails(bookId) {
+        function viewBookDetails(bookId, element) {
             fetch(`/book/${bookId}`)
                 .then(response => response.json())
                 .then(book => {
-                    const detailsModal = document.createElement('div');
-                    detailsModal.className = 'book-details-modal';
-                    detailsModal.innerHTML = `
-                        <div class="book-details">
-                            <h3>${book.title}</h3>
-                            <p>Author: ${book.author}</p>
-                            <p>Genre: ${book.genre || 'Not specified'}</p>
-                            <p>Condition: ${book.condition}</p>
-                            <p>Description: ${book.description || 'No description available'}</p>
-                            <button onclick="closeDetails()">Close</button>
-                        </div>
+                    const bookContainer = element.closest('.available_book');
+                    const detailsContainer = bookContainer.querySelector('.book-details');
+                    detailsContainer.innerHTML = `
+                        <p>Genre: ${book.genre || 'Not specified'}</p>
+                        <p>Condition: ${book.condition}</p>
+                        <p>Description: ${book.description || 'No description available'}</p>
+                        <p>Location: ${book.location}</p>
+                        <button class="close-button" onclick="closeDetails(this)">Close</button>
                     `;
-                    document.body.appendChild(detailsModal); // Add modal to the body
+                    detailsContainer.classList.add('expanded');
                 })
                 .catch(error => console.error('Error:', error));
         }
 
-        function closeDetails() {
-            const detailsModal = document.querySelector('.book-details-modal');
-            if (detailsModal) {
-                detailsModal.remove();
-            }
+        function closeDetails(element) {
+            const detailsContainer = element.closest('.book-details');
+            detailsContainer.classList.remove('expanded');
+        }
+        function goBack() {
+            document.getElementById('search-input').value = '';
+            fetchBooks();
         }
     </script>
-
 </body>
 </html>

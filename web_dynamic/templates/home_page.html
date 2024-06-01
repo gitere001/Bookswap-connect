@@ -17,7 +17,12 @@
                     <li class="navbar__item navbar__item--active"><a href="#">Home</a></li>
                     <li class="navbar__item"><a href="#">My Books</a></li>
                     <li class="navbar__item"><a href="#">Profile</a></li>
-                    <li class="navbar__item"><a href="#">Notifications</a></li>
+                    <li class="navbar__item">
+                        <a href="/home/messages" id="notifications-link">
+                            Messages
+                            <span id="notification-count" class="notification-count"></span>
+                        </a>
+                    </li>
                     <li class="navbar__item"><a href="/logout">Logout</a></li>
                 </ul>
             </nav>
@@ -47,6 +52,7 @@
             <div class="search-results">
                 <div class="search-books-list" id="search-books"></div>
             </div>
+            <button id="back-button" style="display:none;" onclick="goBack()">Back</button>
         </section>
         <section class="recommended-container">
             <h2>Recommended Books</h2>
@@ -83,6 +89,7 @@
                 .then(response => response.json())
                 .then(data => {
                     displayResults(data);
+                    document.getElementById('back-button').style.display = 'block';
                 })
                 .catch(error => console.error('Error:', error));
         }
@@ -92,25 +99,26 @@
             resultsContainer.innerHTML = '';
             if (books.length === 0) {
                 resultsContainer.innerHTML = `<h3>No books found. Please try another search term.</h3>`;
-
-            }books.forEach(book => {
-                const bookElement = document.createElement('div');
-                bookElement.className = 'search-book';
-                bookElement.innerHTML = `
-                    <div class="cover">
-                        <img src="/static/images/bookswap_front_page.png" alt="${book.title}">
-                    </div>
-                    <div class="details">
-                        <h3>${book.title}</h3>
-                        <p>Author: ${book.author}</p>
-                        <button onclick="viewBookDetails('${book.id}')">View Details</button>
-                        <a href="/home/request_swap?book_id=${book.id}" class="swap-button">Request Swap</a>
-                    </div>
-                `;
-                resultsContainer.appendChild(bookElement);
-            });
+            } else {
+                books.forEach(book => {
+                    const bookElement = document.createElement('div');
+                    bookElement.className = 'search-book';
+                    bookElement.innerHTML = `
+                        <div class="cover">
+                            <img src="/static/images/bookswap_front_page.png" alt="${book.title}">
+                        </div>
+                        <div class="details">
+                            <h3>${book.title}</h3>
+                            <p>Author: ${book.author}</p>
+                            <button onclick="viewBookDetails('${book.id}', this)">View Details</button>
+                            <a href="/home/request_swap?book_id=${book.id}" class="swap-button">Request Swap</a>
+                            <div class="book-details"></div> <!-- Added details container -->
+                        </div>
+                    `;
+                    resultsContainer.appendChild(bookElement);
+                });
+            }
         }
-
 
         function addRecommendedBooks() {
             fetch('/recommended_books')
@@ -134,45 +142,48 @@
                     <div class="details">
                         <h3>${book.title}</h3>
                         <p>Author: ${book.author}</p>
-                        <button onclick="viewBookDetails('${book.id}')">View Details</button>
+                        <button onclick="viewBookDetails('${book.id}', this)">View Details</button>
                         <a href="/home/request_swap?book_id=${book.id}" class="swap-button">Request Swap</a>
+                        <div class="book-details"></div> <!-- Added details container -->
                     </div>
                 `;
                 recommendedContainer.appendChild(bookElement);
             });
         }
 
-        function viewBookDetails(bookId) {
+
+        function viewBookDetails(bookId, element) {
             fetch(`/book/${bookId}`)
-            .then(response => response.json())
-            .then(book => {
-                const detailsModal = document.createElement('div');
-                detailsModal.className = 'book-details-modal';
-                detailsModal.innerHTML = `
-                    <div class="book-details">
-                        <h3>${book.title}</h3>
-                        <p>Author: ${book.author}</p>
+                .then(response => response.json())
+                .then(book => {
+                    const bookContainer = element.closest('.search-book, .recommended-book'); // Corrected selector
+                    const detailsContainer = bookContainer.querySelector('.book-details');
+                    detailsContainer.innerHTML = `
                         <p>Genre: ${book.genre || 'Not specified'}</p>
                         <p>Condition: ${book.condition}</p>
                         <p>Description: ${book.description || 'No description available'}</p>
-                        <button onclick="closeDetails()">Close</button>
-                    </div>
-                `;
-                const clickedBook = document.querySelector(`[onclick="viewBookDetails('${bookId}')"]`);
-                const rect = clickedBook.getBoundingClientRect();
-                detailsModal.style.top = `${rect.bottom}px`;
-                detailsModal.style.left = `${rect.left}px`;
-
-                document.body.appendChild(detailsModal);
-            })
-            .catch(error => console.error('Error', error));
+                        <p>Location: ${book.location}</p>
+                        <button class="close-button" onclick="closeDetails(this)">Close</button>
+                    `;
+                    detailsContainer.classList.add('expanded'); // Optional: Add a class for styling the expanded state
+                })
+                .catch(error => console.error('Error:', error));
         }
 
-        function closeDetails() {
-            const detailsModal = document.querySelector('.book-details-modal');
-            if (detailsModal) {
-                detailsModal.remove();
-            }
+        function closeDetails(element) {
+            const detailsContainer = element.closest('.book-details');
+            detailsContainer.classList.remove('expanded'); // Optional: Remove the class for styling
+            detailsContainer.innerHTML = '';
+        }
+        function goBack() {
+            // Clear the search input
+            document.getElementById('search-input').value = '';
+            // Hide the back button
+            document.getElementById('back-button').style.display = 'none';
+            // Clear search results
+            document.querySelector('.search-results').innerHTML = '';
+            // Reload recommended books
+            addRecommendedBooks();
         }
     </script>
 </body>
