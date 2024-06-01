@@ -1,63 +1,114 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* swap_requests.css */
 
-/* Global styling */
 body {
     font-family: Arial, sans-serif;
-    line-height: 1.6;
-    background-color: #f0f0f0;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
 }
 
-#swap-records-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
+.header {
+    color: #333;
+    margin-bottom: 20px;
 }
 
-#swap-records-table th,
-#swap-records-table td {
-    border: 1px solid #ccc;
-    padding: 8px;
-    text-align: left;
+button {
+    background-color: #062545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 16px;
 }
 
-#swap-records-table th {
-    background-color: #f0f0f0;
-    font-weight: bold;
-}
-@media (max-width: 600px) {
-    #book-details {
-        font-size: 16px;
-    }
-
-    #user-books-dropdown,
-    #swap-message,
-    #submit-swap-request {
-        font-size: 14px;
-    }
+button:hover {
+    background-color: #0056b3;
 }
 
 .home-button {
-	border-radius: 4px;
-	position: relative;
-	top: 20px;
-	left: 20px;
-	padding: 10px 20px;
-	background-color: rgb(32, 167, 75);
-	border: none;
-	cursor: pointer;
-	font-size: 16px;
-	transition: background-color 0.3s ease;
-	margin-bottom: 40px;
+    margin: 20px;
+}
 
+#swap-requests {
+    width: 80%;
+    margin: auto;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
-.home-button:hover {
-	background-color: rgb(14, 66, 23);
+
+h3.header {
+    text-align: center;
+    font-size: 24px;
 }
-.header {
-	color: hsl(227, 89%, 36%);
-	margin-left: 20px;
+
+#incoming-requests, #your-requests {
+    margin-bottom: 40px;
+}
+
+h4 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #007bff;
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+thead th {
+    background-color: #0b4a8e;
+    color: white;
+    padding: 10px;
+    text-align: left;
+    font-size: 16px;
+}
+
+tbody td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.accept-request-btn, .decline-request-btn, .message-request-btn {
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.accept-request-btn {
+    background-color: #28a745;
+}
+
+.accept-request-btn:hover {
+    background-color: #218838;
+}
+
+.decline-request-btn {
+    background-color: #dc3545;
+}
+
+.decline-request-btn:hover {
+    background-color: #c82333;
+}
+
+.message-request-btn {
+    background-color: #17a2b8;
+}
+
+.message-request-btn:hover {
+    background-color: #138496;
 }

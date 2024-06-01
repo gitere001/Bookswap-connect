@@ -3,86 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swap History - BookSwap Connect</title>
+    <title>Swap Requests - BookSwap Connect</title>
     <link rel="stylesheet" href="/static/css/swap_history.css">
 </head>
 <body>
-	<button class="home-button" onclick="window.location.href='/home';">Go to Home</button>
-	<section id="swap-records">
-		<h3 class=header >Swap History</h3>
-		<table id="swap-records-table">
-			<thead>
-				<tr>
-					<th>Requested Date</th>
-					<th>Requested Book Title</th>
-					<th>Offered Book Title</th>
-					<th>Status</th>
-					<th>Actions</th>
-				</tr>
-			</thead>
-			<tbody id="swap-records-list">
-				<!-- Records will be inserted here -->
-			</tbody>
-		</table>
-	</section>
-	<script>
-		fetchAndDisplaySwapRecords();
+    <button class="home-button" onclick="window.location.href='/home';">Go to Home</button>
+    <section id="swap-requests">
+        <h3 class="header">Swap Requests</h3>
+        <div id="incoming-requests">
+            <h4>Incoming Requests</h4>
+            <table id="incoming-requests-table">
+                <thead>
+                    <tr>
+                        <th>Requested Date</th>
+                        <th>Requested Book Title</th>
+                        <th>Offered Book Title</th>
+                        <th>Book's location</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="incoming-requests-list">
+                    <!-- Records will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+        <div id="your-requests">
+            <h4>Your Requests</h4>
+            <table id="your-requests-table">
+                <thead>
+                    <tr>
+                        <th>Requested Date</th>
+                        <th>Requested Book Title</th>
+                        <th>Offered Book Title</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="your-requests-list">
+                    <!-- Records will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <script>
+        fetchAndDisplayRequests();
 
-            // Function to fetch and display swap records
-            function fetchAndDisplaySwapRecords() {
-                const recordsList = document.getElementById('swap-records-list');
-                recordsList.innerHTML = ''; // Clear existing records
+        function fetchAndDisplayRequests() {
+            const incomingList = document.getElementById('incoming-requests-list');
+            const yourList = document.getElementById('your-requests-list');
 
-                fetch('/swap_records')
-                    .then(response => response.json())
-                    .then(records => {
-                        records.forEach(record => {
-                            const row = document.createElement('tr');
+            incomingList.innerHTML = ''; // Clear existing records
+            yourList.innerHTML = ''; // Clear existing records
 
-                            // Add table cells for record details
-                            row.innerHTML = `
-                                <td>${record.requested_date}</td>
-                                <td>${record.requested_book_title}</td>
-                                <td>${record.offered_book_title}</td>
-                                <td>${record.status}</td>
-                                <td><button class="cancel-request-btn" data-request-id="${record.id}">Cancel</button></td>
-                            `;
-
-                            // Add click event listener to cancel button
-                            const cancelBtn = row.querySelector('.cancel-request-btn');
-                            cancelBtn.addEventListener('click', function() {
-                                const requestId = this.getAttribute('data-request-id');
-								if (requestId) {
-									cancelSwapRequest(requestId);
-								} else {
-									console.error('Request ID is undefined');
-								}
-                            });
-
-                            recordsList.appendChild(row);
-                        });
-                    })
-                    .catch(error => console.error('Error fetching swap records:', error));
-            }
-
-            // Function to cancel swap request
-            function cancelSwapRequest(requestId) {
-                if (!confirm('Are you sure you want to cancel this swap request?')) {
-                    return;
-                }
-
-                fetch(`/cancel_swap_request/${requestId}`, {
-                    method: 'DELETE',
-                })
+            fetch('/swap_records')
                 .then(response => response.json())
-                .then(data => {
-                    alert('Swap request cancelled successfully');
-                    // Optionally, update the UI or reload swap records
-                    fetchAndDisplaySwapRecords(); // Fetch and display records again
-                })
-                .catch(error => console.error('Error cancelling swap request:', error));
-            }
-	</script>
+                .then(records => {
+                    records.incoming_requests.forEach(record => {
+                        const row = createRow(record, 'incoming');
+                        incomingList.appendChild(row);
+                    });
 
+                    records.your_requests.forEach(record => {
+                        const row = createRow(record, 'your');
+                        yourList.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching swap records:', error));
+        }
+
+        function createRow(record, type) {
+            const row = document.createElement('tr');
+
+            // Add table cells for record details based on the type of request
+            if (type === 'incoming') {
+                row.innerHTML = `
+                    <td>${record.requested_date}</td>
+                    <td>${record.requested_book_title}</td>
+                    <td>${record.offered_book_title}</td>
+                    <td>${record.location}</td>
+                    <td>${record.status}</td>
+                    <td>
+                        ${generateActionButtons(record, type)}
+                        <button class="message-request-btn" data-request-id="${record.id}" data-recipient-id="${record.requester_id}">Message</button>
+                    </td>
+                `;
+            } else {
+                row.innerHTML = `
+                    <td>${record.requested_date}</td>
+                    <td>${record.requested_book_title}</td>
+                    <td>${record.offered_book_title}</td>
+                    <td>${record.status}</td>
+                    <td>
+                        ${generateActionButtons(record, type)}
+                        ${record.status === 'pending' ? `<button class="cancel-request-btn" data-request-id="${record.id}">Cancel</button>` : ''}
+                        <button class="message-request-btn" data-request-id="${record.id}" data-recipient-id="${record.requester_id}">Message</button>
+                    </td>
+                `;
+            }
+
+            return row;
+        }
+
+        function generateActionButtons(record, type) {
+            if (type === 'incoming') {
+                if (record.status === 'pending') {
+                    return `
+                        <button class="accept-request-btn" data-request-id="${record.id}">Accept</button>
+                        <button class="decline-request-btn" data-request-id="${record.id}">Decline</button>
+                    `;
+                } else {
+                    return '';
+                }
+            }
+            return '';
+        }
+
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('accept-request-btn')) {
+                const requestId = event.target.getAttribute('data-request-id');
+                if (requestId) {
+                    updateSwapRequestStatus(requestId, 'accept');
+                }
+            } else if (event.target.classList.contains('decline-request-btn')) {
+                const requestId = event.target.getAttribute('data-request-id');
+                if (requestId) {
+                    updateSwapRequestStatus(requestId, 'decline');
+                }
+            } else if (event.target.classList.contains('cancel-request-btn')) {
+                const requestId = event.target.getAttribute('data-request-id');
+                if (requestId) {
+                    cancelSwapRequest(requestId);
+                }
+            }
+        });
+
+        function updateSwapRequestStatus(requestId, action) {
+            fetch(`/swap_request/${requestId}/${action}`, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(`Swap request ${action}ed successfully`);
+                fetchAndDisplayRequests(); // Fetch and display records again
+            })
+            .catch(error => console.error(`Error ${action}ing swap request:`, error));
+        }
+
+        function cancelSwapRequest(requestId) {
+            fetch(`/cancel_swap_request/${requestId}`, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                fetchAndDisplayRequests(); // Fetch and display records again
+            })
+            .catch(error => console.error('Error cancelling swap request:', error));
+        }
+
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('message-request-btn')) {
+                const recipientId = event.target.getAttribute('data-recipient-id');
+                if (recipientId) {
+                    window.location.href = `/home/messages?recipient_id=${recipientId}`;
+                }
+            }
+        });
+    </script>
 </body>
 </html>

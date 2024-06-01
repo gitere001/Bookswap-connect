@@ -5,11 +5,13 @@ from models.base_model import Base
 from models.user import User
 from models.book import Book
 from models.swap_request import SwapRequest
+from models.message import Message
 
 classes = {
     "User": User,
     "Book": Book,
     "SwapRequest": SwapRequest,
+    "Message": Message,
 }
 
 

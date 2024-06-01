@@ -4,6 +4,7 @@ from flask import session
 from models import storage
 from models.user import User
 from models.book import Book
+from models.message import Message
 from models.swap_request import SwapRequest
 from sqlalchemy.exc import IntegrityError
 from utils.text_utils import normalize_text
@@ -11,6 +12,7 @@ from fuzzywuzzy import fuzz
 from utils.file_utils import allowed_file
 import requests
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import random
 
@@ -120,27 +122,31 @@ def signup():
         return redirect('/signup')
 
 
-@app.route('/home/add_book/', strict_slashes=False, methods=['GET', 'POST'])
+@app.route('/home/add_book', strict_slashes=False, methods=['GET', 'POST'])
 def add_book():
     if request.method == 'POST':
+        # Extracting form data
         title = request.form['title']
         author = request.form['author']
         genre = request.form['genre']
         condition = request.form['condition']
         description = request.form['description']
+        location = request.form['location']
         user_id = session['user_id']
 
+        # Normalize text
         normalized_title = normalize_text(title)
         normalized_author = normalize_text(author)
 
+        # Check if similar book exists for the user
         user_books = storage.find(Book, Book.user_id == user_id)
-
         for book in user_books:
             if (fuzz.ratio(normalize_text(book.title), normalized_title) > 90
                     and normalize_text(book.author) == normalized_author):
-                return jsonify({'message': f'You have already added a similar '
-                                f'book: "{book.title}"', 'success':
-                                    False}), 400
+                return jsonify({
+                    'message': f'You have already added a similar book: "{book.title}"',
+                    'success': False
+                }), 400
 
         cover = None
         if 'file' in request.files:
@@ -148,14 +154,10 @@ def add_book():
             if file and allowed_file(file.filename):
                 cover = upload_file(file)
                 if cover is None:
-                    return jsonify({'message': 'Invalid file type. Please '
-                                    'upload an image file (png, jpg,'
-                                    'jpeg, gif).', 'success': False}), 400
-            else:
-                return jsonify({'message': 'No file part or invalid file type.'
-                                ' Please upload an image file'
-                                ' (png, jpg, jpeg, gif).', 'success':
-                                    False}), 400
+                    return jsonify({
+                        'message': 'Invalid file type. Please upload an image file (png, jpg, jpeg, gif).',
+                        'success': False
+                    }), 400
 
         new_book = Book(
             title=title,
@@ -165,16 +167,24 @@ def add_book():
             description=description,
             user_id=user_id,
             cover=cover,
+            location=location,
+            swapped=False,
         )
+
         try:
+
             storage.new(new_book)
             storage.save()
-            return jsonify({'message': 'Successfully added a book',
-                            'success': True}), 200
+            return jsonify({
+                'message': 'Successfully added a book',
+                'success': True
+            }), 200
         except IntegrityError:
             storage.rollback()
-            return jsonify({'message': 'An error occurred while adding the'
-                            ' book', 'success': False}), 500
+            return jsonify({
+                'message': 'An error occurred while adding the book',
+                'success': False
+            }), 500
 
     return render_template('add_book.html')
 
@@ -205,6 +215,7 @@ def search_books():
             'condition': book.condition,
             'description': book.description,
             'cover': book.cover,
+            'location': book.location,
         }
         for book in filtered_books
     ]
@@ -223,6 +234,7 @@ def get_book_details(book_id):
         'genre': book.genre if book.genre else '',
         'condition': book.condition,
         'description': book.description if book.description else '',
+        'location': book.location,
     }
     return jsonify(book_details), 200
 
@@ -230,11 +242,17 @@ def get_book_details(book_id):
 @app.route('/recommended_books', strict_slashes=False, methods=['GET'])
 def recommended_books():
     if 'user_id' not in session:
-        return jsonify('Error: user must be logged in'), 401
+        return jsonify({'error': 'User must be logged in to view recommended books'}), 401
+
     user_id = session['user_id']
     all_books = storage.find(Book)
     filtered_books = [book for book in all_books if book.user_id != user_id]
-    random_books = random.sample(filtered_books, min(len(filtered_books), 3))
+
+    # Ensure that there are enough books to sample from
+    if len(filtered_books) < 3:
+        random_books = filtered_books
+    else:
+        random_books = random.sample(filtered_books, 3)
 
     random_list = []
     for book in random_books:
@@ -246,8 +264,9 @@ def recommended_books():
             'condition': book.condition,
             'description': book.description if book.description else '',
             'cover': book.cover if book.cover else '',
-            }
+        }
         random_list.append(book_details)
+
     return jsonify(random_list)
 
 
@@ -258,20 +277,25 @@ def available_books():
 
 @app.route('/fetch_all_books', strict_slashes=False, methods=['GET'])
 def fetch_all_books():
+    if 'user_id' not in session:
+        return jsonify({'error': 'User must be logged in to view all books'}), 401
+
     user_id = session['user_id']
     all_books = storage.find(Book)
     filtered_books = [book for book in all_books if book.user_id != user_id]
+
     all_books_list = []
     for book in filtered_books:
-        books_details = {
+        book_details = {
             'id': book.id,
             'title': book.title,
             'author': book.author,
             'genre': book.genre if book.genre else '',
             'condition': book.condition,
             'description': book.description if book.description else '',
-            }
-        all_books_list.append(books_details)
+        }
+        all_books_list.append(book_details)
+
     return jsonify(all_books_list)
 
 
@@ -319,33 +343,35 @@ def submit_swap_request():
 
     requested_book_id = data.get('requested_book_id')
     offered_book_id = data.get('offered_book_id')
-    message = data.get('message', '')
 
-    existing_requests = storage.find(SwapRequest,
-                                     SwapRequest.requester_id == user_id,
-                                     SwapRequest.requested_book_id ==
-                                     requested_book_id,
-                                     SwapRequest.status == 'pending')
+    # Validate if the requester's book and requested book exist
+    requested_book = storage.get(Book, requested_book_id)
+    if not requested_book:
+        return jsonify({'message': 'Requested book not found', 'success': False}), 404
 
-    if existing_requests:
-        return jsonify({'message': 'You already have a pending swap request '
-                        'for this book', 'success': False}), 400
+    offered_book = storage.get(Book, offered_book_id)
+    if not offered_book:
+        return jsonify({'message': 'Offered book not found', 'success': False}), 404
 
+    recipient_id = requested_book.user_id
+
+    # Create a swap request object
     swap_request = SwapRequest(
         requester_id=user_id,
+        recipient_id=recipient_id,
         requested_book_id=requested_book_id,
         offered_book_id=offered_book_id,
-        message=message,
         status='pending',
+        swapped=False
     )
+
     try:
         storage.new(swap_request)
         storage.save()
         return jsonify({'message': 'Swap request submitted successfully', 'success': True}), 201
     except IntegrityError:
         storage.rollback()
-        return jsonify({'message': 'An error occurred while sending'
-                        ' your swap request', 'success': False}), 500
+        return jsonify({'message': 'An error occurred while sending your swap request', 'success': False}), 500
 
 
 @app.route('/user_books', strict_slashes=False)
@@ -382,27 +408,71 @@ def render_swap_history():
 @app.route('/swap_records', methods=['GET'])
 def get_swap_records():
     if 'user_id' not in session:
-        return jsonify({'error': 'User must be logged in to view their swap '
-                        'records'}), 401
+        return jsonify({'error': 'User must be logged in to view swap requests'}), 401
+
     user_id = session['user_id']
-    filtered_swaps = storage.find(SwapRequest, SwapRequest.requester_id == user_id)
-    swap_requests_list = []
-    for swap in filtered_swaps:
-        offered_book = storage.get(Book, swap.offered_book_id)
-        requested_book = storage.get(Book, swap.requested_book_id)
-        swap_details = {
-            'id': swap.id,
-            'requester_id': swap.requester_id,
-            'requested_book_id': swap.requested_book_id,
-            'offered_book_id': swap.offered_book_id,
-            'status': swap.status,
-            'message': swap.message,
-            'created_at': swap.created_at,
-            'requested_book_title': requested_book.title if requested_book else 'Book not found',
-            'offered_book_title': offered_book.title if offered_book else 'Book not found',
+
+    incoming_requests = storage.find(SwapRequest, SwapRequest.recipient_id == user_id)
+    # Fetch outgoing requests (where current user is the requester)
+    your_requests = storage.find(SwapRequest, SwapRequest.requester_id == user_id)
+
+    def format_request(record):
+        requested_book = storage.get(Book, record.requested_book_id)
+        offered_book = storage.get(Book, record.offered_book_id)
+
+        if not requested_book and not offered_book:
+            return
+
+        return {
+            'id': record.id,
+            'requested_date': record.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'requested_book_title': requested_book.title,
+            'offered_book_title': offered_book.title,
+            'location': offered_book.location,
+            'status': record.status,
+            'requester_id': record.requester_id,
         }
-        swap_requests_list.append(swap_details)
-    return jsonify(swap_requests_list), 200
+
+    incoming_requests_data = [format_request(record) for record in incoming_requests]
+    your_requests_data = [format_request(record) for record in your_requests]
+
+    return jsonify({
+        'user_id': user_id,
+        'incoming_requests': incoming_requests_data,
+        'your_requests': your_requests_data,
+    })
+
+
+@app.route('/swap_request/<request_id>/<action>', methods=['POST'])
+def update_swap_request_status(request_id, action):
+    if 'user_id' not in session:
+        return jsonify({'error': 'User must be logged in to update swap requests'}), 401
+
+    user_id = session['user_id']
+    swap_request = storage.get(SwapRequest, request_id)
+
+    if not swap_request:
+        return jsonify({'error': 'Swap request not found'}), 404
+
+    requested_book = storage.get(Book, swap_request.requested_book_id)
+
+    if requested_book.user_id != user_id:
+        return jsonify({'error': 'Unauthorized action'}), 403
+
+    if action == 'accept':
+        swap_request.status = 'accepted'
+        swap_request.swapped = True
+    elif action == 'decline':
+        swap_request.status = 'declined'
+    else:
+        return jsonify({'error': 'Invalid action'}), 400
+
+    try:
+        storage.save()
+        return jsonify({'message': f'Swap request {action}ed successfully'}), 200
+    except Exception as e:
+        storage.rollback()
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 
 @app.route('/cancel_swap_request/<request_id>', methods=['DELETE'])
@@ -422,6 +492,11 @@ def cancel_swap_request(request_id):
     storage.save()
 
     return jsonify({'message': 'swap request cancelled successfully'}), 200
+
+
+@app.route('/home/messages', strict_slashes=False)
+def render_messages_html():
+    return render_template('messages.html')
 
 
 if __name__ == "__main__":
