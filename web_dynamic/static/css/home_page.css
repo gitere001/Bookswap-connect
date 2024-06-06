@@ -291,3 +291,14 @@ footer a:hover {
 #back-button:hover {
     background-color: #ec971f;
 }
+.notification-count {
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 5px 10px;
+    font-size: 15px;
+    position: relative;
+    top: -10px;
+    left: 10px;
+    display: none; /* Hidden by default */
+}

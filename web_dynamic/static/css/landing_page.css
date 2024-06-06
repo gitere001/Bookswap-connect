@@ -13,7 +13,7 @@ body {
 	top: 0;
 	width: 100%;
 	z-index: 1000;
-	
+
 }
 .navbar a {
 	float: left;
@@ -119,4 +119,30 @@ h2 {
 }
 html {
     scroll-behavior: smooth;
+}
+.feature-item {
+    display: flex;
+    flex-direction: column; /* Align items vertically */
+    margin-bottom: 40px; /* Add space between feature items */
+}
+
+.feature-image {
+    width: 100%; /* Ensures image takes up the full width of its container */
+    max-width: 300px; /* Adjust as needed */
+    height: 200px; /* Set a consistent height */
+    object-fit: cover; /* Ensures the image covers the area without stretching */
+    border-radius: 10px; /* Optional: rounded corners for a nicer look */
+    margin-bottom: 15px; /* Space between image and text */
+}
+
+/* Optional: Styling for the feature-item text */
+.feature-item h3 {
+    margin: 10px 0;
+    font-size: 1.2em;
+}
+
+.feature-item p {
+    margin: 0;
+    font-size: 1em;
+    color: #333; /* Adjust text color as needed */
 }

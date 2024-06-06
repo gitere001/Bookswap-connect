@@ -1,25 +1,53 @@
-/* notifications.css */
-
-/* Add this style for the notification popup */
-.notification-popup {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    padding: 10px;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+/* message.css */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
 }
-/* notifications.css */
 
-.notification-count {
-    background-color: red;
+.home-button {
+    background-color: #007bff;
     color: white;
-    border-radius: 50%;
-    padding: 2px 8px;
-    font-size: 12px;
-    display: none;
-    position: absolute;
-    top: 5px;
-    right: 10px;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+    margin: 20px;
+}
+
+.home-button:hover {
+    background-color: #0056b3;
+}
+
+.message-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.chat-list {
+    margin-top: 20px;
+}
+
+.chat-item {
+    padding: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.chat-item:last-child {
+    border-bottom: none;
+}
+
+.chat-link {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+}
+
+.chat-link:hover {
+    text-decoration: underline;
+    color: #0056b3;
 }
