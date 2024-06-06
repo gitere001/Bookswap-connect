@@ -85,7 +85,7 @@
                     <td>${record.status}</td>
                     <td>
                         ${generateActionButtons(record, type)}
-                        <button class="message-request-btn" data-request-id="${record.id}" data-recipient-id="${record.requester_id}">Message</button>
+                        <button class="message-request-btn" data-recipient-id="${record.requester_id}">Message</button>
                     </td>
                 `;
             } else {
@@ -97,7 +97,7 @@
                     <td>
                         ${generateActionButtons(record, type)}
                         ${record.status === 'pending' ? `<button class="cancel-request-btn" data-request-id="${record.id}">Cancel</button>` : ''}
-                        <button class="message-request-btn" data-request-id="${record.id}" data-recipient-id="${record.requester_id}">Message</button>
+                        <button class="message-request-btn" data-recipient-id="${record.requester_id}">Message</button>
                     </td>
                 `;
             }
@@ -135,6 +135,11 @@
                 if (requestId) {
                     cancelSwapRequest(requestId);
                 }
+            } else if (event.target.classList.contains('message-request-btn')) {
+                const recipientId = event.target.getAttribute('data-recipient-id');
+                if (recipientId) {
+                    window.location.href = `/chat?recipient_id=${recipientId}`;
+                }
             }
         });
 
@@ -161,15 +166,6 @@
             })
             .catch(error => console.error('Error cancelling swap request:', error));
         }
-
-        document.addEventListener('click', function(event) {
-            if (event.target.classList.contains('message-request-btn')) {
-                const recipientId = event.target.getAttribute('data-recipient-id');
-                if (recipientId) {
-                    window.location.href = `/home/messages?recipient_id=${recipientId}`;
-                }
-            }
-        });
     </script>
 </body>
 </html>

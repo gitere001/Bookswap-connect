@@ -20,7 +20,7 @@
                     <li class="navbar__item">
                         <a href="/home/messages" id="notifications-link">
                             Messages
-                            <span id="notification-count" class="notification-count"></span>
+                            <span id="notification-count" class="notification-count" style="display: none;"></span>
                         </a>
                     </li>
                     <li class="navbar__item"><a href="/logout">Logout</a></li>
@@ -39,7 +39,10 @@
                 <a href="/home/add_book">Add a new book</a>
             </div>
             <div class="view-swap-requests">
-                <a href="/home/swap_requests">View Swap Requests</a>
+                <a href="/home/swap_requests", id="swap-requests-link">
+                    Swap requests
+                    <span id="swap-notification-count" class="notification-count"></span>
+                </a>
             </div>
         </section>
         <section class="browser-available books">
@@ -81,7 +84,11 @@
                     searchBooks(query);
                 }
             });
+            document.getElementById('swap-requests-link').addEventListener('click', function() {
+                markSwapRequestsAsViewed();
+            })
             addRecommendedBooks();
+            checkSwapRequests();
         });
 
         function searchBooks(query) {
@@ -105,7 +112,7 @@
                     bookElement.className = 'search-book';
                     bookElement.innerHTML = `
                         <div class="cover">
-                            <img src="/static/images/bookswap_front_page.png" alt="${book.title}">
+                            <img src="/static/images/book_cover.jpeg" alt="${book.title}">
                         </div>
                         <div class="details">
                             <h3>${book.title}</h3>
@@ -137,7 +144,7 @@
                 bookElement.className = 'recommended-book';
                 bookElement.innerHTML = `
                     <div class="cover">
-                        <img src="/static/images/bookswap_front_page.png" alt="${book.title}">
+                        <img src="/static/images/book_cover.jpeg" alt="${book.title}">
                     </div>
                     <div class="details">
                         <h3>${book.title}</h3>
@@ -150,7 +157,6 @@
                 recommendedContainer.appendChild(bookElement);
             });
         }
-
 
         function viewBookDetails(bookId, element) {
             fetch(`/book/${bookId}`)
@@ -184,6 +190,32 @@
             document.querySelector('.search-results').innerHTML = '';
             // Reload recommended books
             addRecommendedBooks();
+        }
+        function checkSwapRequests() {
+            fetch('/swap_records')
+                .then(response => response.json())
+                .then(data => {
+                    const unviewedCount = data.unviewed_count;
+                    const swapNotificationCountElement = document.getElementById('swap-notification-count');
+                    if (unviewedCount > 0) {
+                        swapNotificationCountElement.textContent = unviewedCount;
+                        swapNotificationCountElement.style.display = 'inline';
+                    } else {
+                        swapNotificationCountElement.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error fetching swap records:', error));
+        }
+        function markSwapRequestsAsViewed() {
+            fetch('/mark_request_viewed', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'All requests marked as viewed') {
+                        const swapNotificationCountElement = document.getElementById('swap-notification-count');
+                        swapNotificationCountElement.style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error marking swap request as viewed:', error));
         }
     </script>
 </body>

@@ -3,80 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messages - BookSwap Connect</title>
-    <link rel="stylesheet" href="/static/css/messages.css">
+    <title>Messages</title>
+    <link rel="stylesheet" href="/static/css/message.css">
 </head>
 <body>
     <button class="home-button" onclick="window.location.href='/home';">Go to Home</button>
-    <section id="messages">
-        <h3 class="header">Messages</h3>
-        <div id="message-list">
-            <!-- Messages will be displayed here -->
+    <h2>Messages</h2>
+    <div class="message-container">
+        <div class="chat-list">
+            <!-- List of chats will be populated here -->
         </div>
-        <div id="message-form">
-            <textarea id="message-content" placeholder="Type your message here..."></textarea>
-            <button id="send-message-btn">Send</button>
-        </div>
-    </section>
+    </div>
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const recipientId = urlParams.get('recipient_id');
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchChats();
+        });
 
-        if (!recipientId) {
-            alert('No recipient selected');
-            window.location.href = '/swap_requests';
-        }
 
-        document.getElementById('send-message-btn').addEventListener('click', sendMessage);
-
-        function sendMessage() {
-            const content = document.getElementById('message-content').value;
-            if (!content) {
-                alert('Message content cannot be empty');
-                return;
-            }
-
-            fetch('/message', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    recipient_id: recipientId,
-                    content: content,
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('message-content').value = ''; // Clear the input
-                    loadMessages(); // Reload messages
-                } else {
-                    alert('Error sending message');
-                }
-            })
-            .catch(error => console.error('Error sending message:', error));
-        }
-
-        function loadMessages() {
-            fetch(`/messages/${recipientId}`)
+        function fetchChats() {
+            fetch('/fetch_chats')
                 .then(response => response.json())
-                .then(messages => {
-                    const messageList = document.getElementById('message-list');
-                    messageList.innerHTML = ''; // Clear existing messages
+                .then(chats => {
+                    const chatList = document.querySelector('.chat-list');
+                    chatList.innerHTML = '';
 
-                    messages.forEach(message => {
-                        const messageElement = document.createElement('div');
-                        messageElement.classList.add('message');
-                        messageElement.innerText = `${message.sender_name}: ${message.content}`;
-                        messageList.appendChild(messageElement);
+                    chats.forEach(chat => {
+                        const chatItem = document.createElement('div');
+                        chatItem.classList.add('chat-item');
+                        chatItem.innerHTML = `
+                            <a href="/chat?recipient_id=${chat.id}" class="chat-link">${chat.other_user}</a>
+                        `;
+                        chatList.appendChild(chatItem);
                     });
                 })
-                .catch(error => console.error('Error loading messages:', error));
+                .catch(error => console.error('Error fetching chats:', error));
         }
-
-        // Load messages when the page is loaded
-        loadMessages();
     </script>
 </body>
 </html>

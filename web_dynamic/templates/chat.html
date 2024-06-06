@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - BookSwap Connect</title>
+    <link rel="stylesheet" href="/static/css/chat.css">
+</head>
+<body>
+    <button class="home-button" onclick="window.location.href='/home/messages';">Go to Messages</button>
+    <div class="chat-container">
+        <div class="messages" id="messages">
+            <!-- Messages will be loaded here -->
+        </div>
+        <div class="message-input">
+            <input type="text" id="message-content" placeholder="Type your message...">
+            <button id="send-message-btn">Send</button>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const recipientId = new URLSearchParams(window.location.search).get('recipient_id');
+            if (recipientId) {
+                loadMessages(recipientId);
+                document.getElementById('send-message-btn').addEventListener('click', function() {
+                    sendMessage(recipientId);
+                });
+            }
+        });
+
+        function loadMessages(recipientId, loggedInUserId) {
+            fetch(`/fetch_messages/${recipientId}`)
+                .then(response => response.json())
+                .then(messages => {
+                    const messagesContainer = document.getElementById('messages');
+                    messagesContainer.innerHTML = '';
+                    messages.forEach(message => {
+                        const messageElement = document.createElement('div');
+                        messageElement.classList.add('message');
+
+                        if (message.sender_id === loggedInUserId) {
+                            messageElement.classList.add('sent');
+                            messageElement.innerHTML = `<strong>You:</strong> ${message.content}`;
+                        } else {
+                            messageElement.classList.add('received');
+                            messageElement.innerHTML = `<strong>${message.sender_name}:</strong> ${message.content}`;
+                        }
+
+                        messagesContainer.appendChild(messageElement);
+                    });
+                    // Scroll to the bottom of the messages container
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                })
+                .catch(error => console.error('Error fetching messages:', error));
+        }
+
+
+        function sendMessage(recipientId) {
+            const content = document.getElementById('message-content').value;
+            if (content.trim() === '') return;
+
+            fetch('/send_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ chat_id: recipientId, content: content }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadMessages(recipientId);
+                        document.getElementById('message-content').value = '';
+                    } else {
+                        alert('Error sending message: ' + data.message);
+                    }
+                })
+                .catch(error => console.error('Error sending message:', error));
+        }
+    </script>
+</body>
+</html>
