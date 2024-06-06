@@ -2,6 +2,12 @@ bookswap/
 __pycache__/
 uploads/
 a.html
+console.py
 input_file.txt
 new_file.txt
 test_bookswap/
+a.py
+b.py
+c.py
+console_backup.py
+d.py
