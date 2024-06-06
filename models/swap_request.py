@@ -13,9 +13,10 @@ class SwapRequest(BaseModel, Base):
     status = Column(Enum('pending', 'accepted', 'declined',
                          name='request_status'), default='pending')
     swapped = Column(Boolean, default=False)
+    viewed = Column(Boolean, default=False)
 
     def __init__(self, requester_id, requested_book_id, offered_book_id,
-                 recipient_id, swapped, status):
+                 recipient_id, swapped, viewed, status):
         super().__init__()
         self.requester_id = requester_id
         self.recipient_id = recipient_id
@@ -23,3 +24,4 @@ class SwapRequest(BaseModel, Base):
         self.offered_book_id = offered_book_id
         self.status = status
         self.swapped = swapped
+        self.viewed = viewed

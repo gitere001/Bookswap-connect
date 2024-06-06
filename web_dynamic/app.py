@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, redirect, flash
-from flask import current_app
+from flask import current_app, url_for
 from flask import session
 from models import storage
 from models.user import User
@@ -144,7 +144,8 @@ def add_book():
             if (fuzz.ratio(normalize_text(book.title), normalized_title) > 90
                     and normalize_text(book.author) == normalized_author):
                 return jsonify({
-                    'message': f'You have already added a similar book: "{book.title}"',
+                    'message': f'You have already added '
+                    f'a similar book: "{book.title}"',
                     'success': False
                 }), 400
 
@@ -155,7 +156,8 @@ def add_book():
                 cover = upload_file(file)
                 if cover is None:
                     return jsonify({
-                        'message': 'Invalid file type. Please upload an image file (png, jpg, jpeg, gif).',
+                        'message': 'Invalid file type. Please upload'
+                        ' an image file (png, jpg, jpeg, gif).',
                         'success': False
                     }), 400
 
@@ -242,7 +244,8 @@ def get_book_details(book_id):
 @app.route('/recommended_books', strict_slashes=False, methods=['GET'])
 def recommended_books():
     if 'user_id' not in session:
-        return jsonify({'error': 'User must be logged in to view recommended books'}), 401
+        return jsonify({'error': 'User must be logged in '
+                        'to view recommended books'}), 401
 
     user_id = session['user_id']
     all_books = storage.find(Book)
@@ -278,7 +281,8 @@ def available_books():
 @app.route('/fetch_all_books', strict_slashes=False, methods=['GET'])
 def fetch_all_books():
     if 'user_id' not in session:
-        return jsonify({'error': 'User must be logged in to view all books'}), 401
+        return jsonify({'error': 'User must be logged '
+                        'in to view all books'}), 401
 
     user_id = session['user_id']
     all_books = storage.find(Book)
@@ -336,7 +340,8 @@ def render_swap_request():
 @app.route('/submit_swap_request', strict_slashes=False, methods=['POST'])
 def submit_swap_request():
     if 'user_id' not in session:
-        return jsonify({'error': 'User must be logged in to submit a swap request'}), 401
+        return jsonify({'error': 'User must be logged in to '
+                        'submit a swap request'}), 401
 
     user_id = session['user_id']
     data = request.get_json()
@@ -347,11 +352,13 @@ def submit_swap_request():
     # Validate if the requester's book and requested book exist
     requested_book = storage.get(Book, requested_book_id)
     if not requested_book:
-        return jsonify({'message': 'Requested book not found', 'success': False}), 404
+        return jsonify({'message': 'Requested book not '
+                        'found', 'success': False}), 404
 
     offered_book = storage.get(Book, offered_book_id)
     if not offered_book:
-        return jsonify({'message': 'Offered book not found', 'success': False}), 404
+        return jsonify({'message': 'Offered book not '
+                        'found', 'success': False}), 404
 
     recipient_id = requested_book.user_id
 
@@ -362,16 +369,19 @@ def submit_swap_request():
         requested_book_id=requested_book_id,
         offered_book_id=offered_book_id,
         status='pending',
-        swapped=False
+        swapped=False,
+        viewed=False,
     )
 
     try:
         storage.new(swap_request)
         storage.save()
-        return jsonify({'message': 'Swap request submitted successfully', 'success': True}), 201
+        return jsonify({'message': 'Swap request submitted '
+                        'successfully', 'success': True}), 201
     except IntegrityError:
         storage.rollback()
-        return jsonify({'message': 'An error occurred while sending your swap request', 'success': False}), 500
+        return jsonify({'message': 'An error occurred while sending your swap'
+                        ' request', 'success': False}), 500
 
 
 @app.route('/user_books', strict_slashes=False)
@@ -381,8 +391,7 @@ def get_users_books():
                         'their books'}), 401
 
     user_id = session['user_id']
-    all_books = storage.find(Book)
-    users_books = [book for book in all_books if book.user_id == user_id]
+    users_books = storage.find(Book, Book.user_id == user_id)
 
     users_book_list = []
     for book in users_books:
@@ -394,6 +403,7 @@ def get_users_books():
             'condition': book.condition,
             'description': book.description,
             'cover': book.cover,
+            'location': book.location,
         }
         users_book_list.append(book_details)
 
@@ -408,13 +418,15 @@ def render_swap_history():
 @app.route('/swap_records', methods=['GET'])
 def get_swap_records():
     if 'user_id' not in session:
-        return jsonify({'error': 'User must be logged in to view swap requests'}), 401
+        return jsonify({'error': 'User must be logged in to view'
+                        ' swap requests'}), 401
 
     user_id = session['user_id']
 
-    incoming_requests = storage.find(SwapRequest, SwapRequest.recipient_id == user_id)
-    # Fetch outgoing requests (where current user is the requester)
-    your_requests = storage.find(SwapRequest, SwapRequest.requester_id == user_id)
+    incoming_requests = storage.find(SwapRequest, SwapRequest.recipient_id ==
+                                     user_id)
+    your_requests = storage.find(SwapRequest, SwapRequest.requester_id ==
+                                 user_id)
 
     def format_request(record):
         requested_book = storage.get(Book, record.requested_book_id)
@@ -431,22 +443,46 @@ def get_swap_records():
             'location': offered_book.location,
             'status': record.status,
             'requester_id': record.requester_id,
+            'viewed': record.viewed,
         }
 
-    incoming_requests_data = [format_request(record) for record in incoming_requests]
+    incoming_requests_data = [format_request(record) for record in
+                              incoming_requests]
     your_requests_data = [format_request(record) for record in your_requests]
+
+    unviewed_count = sum(1 for record in incoming_requests if record.viewed ==
+                         0)
 
     return jsonify({
         'user_id': user_id,
         'incoming_requests': incoming_requests_data,
         'your_requests': your_requests_data,
+        'unviewed_count': unviewed_count,
     })
+
+
+@app.route('/mark_request_viewed', strict_slashes=False, methods=['POST'])
+def mark_request_viewed():
+    if 'user_id' not in session:
+        return jsonify({'error': 'User must be logged in first'}), 401
+    user_id = session['user_id']
+
+    user_requests = storage.find(SwapRequest, SwapRequest.recipient_id ==
+                                 user_id)
+
+    for req in user_requests:
+        if req.viewed == 0:
+            req.viewed = 1
+    storage.save()
+
+    return jsonify({'message': 'All requests marked as viewed'}), 200
 
 
 @app.route('/swap_request/<request_id>/<action>', methods=['POST'])
 def update_swap_request_status(request_id, action):
     if 'user_id' not in session:
-        return jsonify({'error': 'User must be logged in to update swap requests'}), 401
+        return jsonify({'error': 'User must be logged in'
+                        ' to update swap requests'}), 401
 
     user_id = session['user_id']
     swap_request = storage.get(SwapRequest, request_id)
@@ -469,7 +505,8 @@ def update_swap_request_status(request_id, action):
 
     try:
         storage.save()
-        return jsonify({'message': f'Swap request {action}ed successfully'}), 200
+        return jsonify({'message': f'Swap request'
+                        f' {action}ed successfully'}), 200
     except Exception as e:
         storage.rollback()
         return jsonify({'error': f'An error occurred: {str(e)}'}), 500
@@ -486,7 +523,8 @@ def cancel_swap_request(request_id):
         return jsonify({'error': 'swap request not found'}), 404
 
     if swap_request.requester_id != session['user_id']:
-        return jsonify({'error': 'you are not authorised to cancel this swap request'}), 403
+        return jsonify({'error': 'you are not authorised to '
+                        'cancel this swap request'}), 403
 
     storage.delete(swap_request)
     storage.save()
@@ -496,7 +534,156 @@ def cancel_swap_request(request_id):
 
 @app.route('/home/messages', strict_slashes=False)
 def render_messages_html():
-    return render_template('messages.html')
+    recipient_id = request.args.get('recipient_id', None)
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('login'))
+
+    if recipient_id:
+        chat_exists = storage.find(Message,
+                                   ((Message.sender_id == user_id) &
+                                    (Message.recipient_id == recipient_id)) |
+                                   ((Message.sender_id == recipient_id) &
+                                    (Message.recipient_id == user_id))
+                                   )
+
+        if not chat_exists:
+            welcome_message = Message(
+                sender_id=user_id,
+                recipient_id=recipient_id,
+                content="Hello! Let's start chatting."
+            )
+            storage.new(welcome_message)
+            storage.save()
+
+    return render_template('messages.html', recipient_id=recipient_id)
+
+
+@app.route('/fetch_chats', strict_slashes=False, methods=['GET'])
+def fetch_chats():
+    if 'user_id' not in session:
+        return jsonify({'error': 'User must be logged in to view chats'}), 401
+
+    user_id = session['user_id']
+    chats = []
+
+    messages_sent = storage.find(Message, Message.sender_id == user_id)
+    for message in messages_sent:
+        if message.recipient_id not in chats:
+            chats.append(message.recipient_id)
+
+    messages_received = storage.find(Message, Message.recipient_id == user_id)
+    for message in messages_received:
+        if message.sender_id not in chats:
+            chats.append(message.sender_id)
+
+    chat_list = []
+
+    for chat_id in chats:
+        other_user = storage.get(User, chat_id)
+        if other_user:
+            chat_list.append({
+                'id': chat_id,
+                'other_user': other_user.first_name,
+            })
+
+    return jsonify(chat_list)
+
+
+@app.route('/fetch_messages/<chat_id>', methods=['GET'])
+def fetch_messages(chat_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'User must be logged'
+                        ' in to view messages'}), 401
+
+    user_id = session['user_id']
+
+    messages = storage.find(Message,
+                            ((Message.sender_id == user_id) &
+                             (Message.recipient_id == chat_id)) |
+                            ((Message.sender_id == chat_id) &
+                             (Message.recipient_id == user_id))
+                            )
+
+    message_list = [{
+        'sender_id': user_id,
+        'sender_name': storage.get(User, message.sender_id).first_name,
+        'content': message.content,
+    } for message in messages]
+
+    return jsonify(message_list)
+
+
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    if 'user_id' not in session:
+        return jsonify({'error': 'User'
+                        ' must be logged in to send messages'}), 401
+
+    user_id = session['user_id']
+    data = request.get_json()
+
+    chat_id = data.get('chat_id')
+    content = data.get('content')
+
+    if not chat_id or not content:
+        return jsonify({'message': 'Chat ID or message'
+                        ' content missing', 'success': False}), 400
+
+    new_message = Message(
+        sender_id=user_id,
+        recipient_id=chat_id,
+        content=content,
+    )
+
+    try:
+        storage.new(new_message)
+        storage.save()
+        return jsonify({'message': 'Message sent '
+                        'successfully', 'success': True}), 200
+    except IntegrityError:
+        storage.rollback()
+        return jsonify({'message': 'An error occurred while '
+                        'sending the message', 'success': False}), 500
+
+
+@app.route('/chat', strict_slashes=False)
+def render_chat_html():
+    recipient_id = request.args.get('recipient_id')
+    return render_template('chat.html', recipient_id=recipient_id)
+
+
+@app.route('/unread_message_count', strict_slashes=False, methods=['GET'])
+def unread_messages():
+    if 'user_id' not in session:
+        return jsonify({'error': 'you need to be logged in first'}), 401
+    user_id = session['user_id']
+
+    unread_count = storage.count(Message, recipient_id=user_id, is_read=0)
+
+    return jsonify({'unread_message': unread_count})
+
+
+@app.route('/mark_messages_as_read', strict_slashes=False, methods=['POST'])
+def mark_messages_read():
+    if 'user_id' not in session:
+        return jsonify({'error': 'You need to be logged in first'}), 401
+    user_id = session['user_id']
+
+    unread_messages = storage.find(Message, Message.recipient_id ==
+                                   user_id, Message.is_read == 0)
+
+    for message in unread_messages:
+        message.is_read = True
+
+    try:
+        storage.save()
+        return jsonify({'message': 'Messages marked successfully'}), 200
+    except IntegrityError:
+        storage.rollback()
+        return jsonify({'error': 'Error while marking the '
+                        'messages', 'success': False}), 500
 
 
 if __name__ == "__main__":
