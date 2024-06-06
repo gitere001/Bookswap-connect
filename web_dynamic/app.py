@@ -23,6 +23,15 @@ app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
 
 def upload_file(file):
+    """
+    Uploads a file if it is an allowed file type.
+
+    Args:
+        file (werkzeug.datastructures.FileStorage): The file to be uploaded.
+
+    Returns:
+        str: The file path if the upload is successful, None otherwise.
+    """
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -33,11 +42,23 @@ def upload_file(file):
 
 @app.route('/', strict_slashes=False)
 def landing_page():
+    """
+    Renders the landing page.
+
+    Returns:
+        Response: The landing page HTML.
+    """
     return (render_template('landing_page.html'))
 
 
 @app.route('/login', strict_slashes=False, methods=['GET', 'POST'])
 def login():
+    """
+    Handles user login.
+
+    Returns:
+        Response: The login page HTML on GET, or a redirect to the home page on POST.
+    """
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
@@ -61,17 +82,35 @@ def login():
 
 @app.route('/logout', strict_slashes=False)
 def logout():
+    """
+    Logs out the current user by clearing the session.
+
+    Returns:
+        Response: Redirect to the login page.
+    """
     session.clear()
     return redirect('/login')
 
 
 @app.route('/signup', strict_slashes=False)
 def sign_up_page():
+    """
+    Renders the sign-up page.
+
+    Returns:
+        Response: The sign-up page HTML.
+    """
     return (render_template('sign_up.html'))
 
 
 @app.route('/home', strict_slashes=False, methods=['GET'])
 def home_page():
+    """
+    Renders the home page for logged-in users.
+
+    Returns:
+        Response: The home page HTML if the user is logged in, otherwise redirect to login page.
+    """
     if 'user_id' not in session:
         flash('You need to login first', 'error')
         return redirect('/login')
@@ -80,6 +119,12 @@ def home_page():
 
 @app.route('/check_email', strict_slashes=False, methods=['POST'])
 def check_email():
+    """
+    Checks if an email is already registered.
+
+    Returns:
+        Response: JSON indicating whether the email exists.
+    """
     data = request.json
     email = data.get('email', None)
 
@@ -95,6 +140,12 @@ def check_email():
 
 @app.route('/sign_up', strict_slashes=False, methods=['POST'])
 def signup():
+    """
+    Handles user sign-up.
+
+    Returns:
+        Response: Redirect to login page on success, otherwise redirect to sign-up page with error messages.
+    """
     first_name = request.form['first_name']
     last_name = request.form['last_name']
     email = request.form['email']
@@ -124,8 +175,13 @@ def signup():
 
 @app.route('/home/add_book', strict_slashes=False, methods=['GET', 'POST'])
 def add_book():
+    """
+    Adds a book to the user's collection.
+
+    Returns:
+        Response: The add book page HTML on GET, JSON response on POST.
+    """
     if request.method == 'POST':
-        # Extracting form data
         title = request.form['title']
         author = request.form['author']
         genre = request.form['genre']
@@ -134,11 +190,9 @@ def add_book():
         location = request.form['location']
         user_id = session['user_id']
 
-        # Normalize text
         normalized_title = normalize_text(title)
         normalized_author = normalize_text(author)
 
-        # Check if similar book exists for the user
         user_books = storage.find(Book, Book.user_id == user_id)
         for book in user_books:
             if (fuzz.ratio(normalize_text(book.title), normalized_title) > 90
@@ -193,6 +247,12 @@ def add_book():
 
 @app.route('/search', strict_slashes=False, methods=['GET'])
 def search_books():
+    """
+    Searches for books by title or author.
+
+    Returns:
+        Response: JSON list of books matching the query.
+    """
     query = request.args.get('query', '')
     if not query:
         return jsonify([]), 200
@@ -226,6 +286,15 @@ def search_books():
 
 @app.route('/book/<book_id>', strict_slashes=False, methods=['GET'])
 def get_book_details(book_id):
+    """
+    Gets details of a specific book.
+
+    Args:
+        book_id (str): The ID of the book.
+
+    Returns:
+        Response: JSON details of the book.
+    """
     book = storage.get(Book, book_id)
     if not book:
         return jsonify({'error': 'Book not found'}), 404
@@ -243,6 +312,12 @@ def get_book_details(book_id):
 
 @app.route('/recommended_books', strict_slashes=False, methods=['GET'])
 def recommended_books():
+    """
+    Gets a list of recommended books for the logged-in user.
+
+    Returns:
+        Response: JSON list of recommended books.
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'User must be logged in '
                         'to view recommended books'}), 401
@@ -275,6 +350,9 @@ def recommended_books():
 
 @app.route('/home/available_books', strict_slashes=False, methods=['GET'])
 def available_books():
+    """
+    renders the html for all available books for swap in the platform
+    """
     return render_template('available_books.html')
 
 
@@ -305,6 +383,9 @@ def fetch_all_books():
 
 @app.route('/searc/suggestions', strict_slashes=False, methods=['GET'])
 def search_suggestion():
+    """
+    enhance user experience by suggesting books based on their search query
+    """
     query = request.args.get('query', '')
     if not query:
         return jsonify([]), 200
@@ -334,11 +415,19 @@ def search_suggestion():
 
 @app.route('/home/request_swap', strict_slashes=False)
 def render_swap_request():
+    """
+    render the page where the user can initiate swap
+    """
     return render_template('request_swap.html')
 
 
 @app.route('/submit_swap_request', strict_slashes=False, methods=['POST'])
 def submit_swap_request():
+    """
+    send a bookswap request by first checking is the user is logged in,
+    check if requested book or offered book is available and creates
+    a swap_request object.
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'User must be logged in to '
                         'submit a swap request'}), 401
@@ -349,7 +438,6 @@ def submit_swap_request():
     requested_book_id = data.get('requested_book_id')
     offered_book_id = data.get('offered_book_id')
 
-    # Validate if the requester's book and requested book exist
     requested_book = storage.get(Book, requested_book_id)
     if not requested_book:
         return jsonify({'message': 'Requested book not '
@@ -362,7 +450,6 @@ def submit_swap_request():
 
     recipient_id = requested_book.user_id
 
-    # Create a swap request object
     swap_request = SwapRequest(
         requester_id=user_id,
         recipient_id=recipient_id,
@@ -386,6 +473,10 @@ def submit_swap_request():
 
 @app.route('/user_books', strict_slashes=False)
 def get_users_books():
+    """
+    gets books added by the current user which they can use for swapping with
+    other users
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'User must be logged in to view '
                         'their books'}), 401
@@ -412,11 +503,15 @@ def get_users_books():
 
 @app.route('/home/swap_requests', strict_slashes=False)
 def render_swap_history():
+    """renders a html where the user can view the swap request"""
     return render_template('/swap_history.html')
 
 
 @app.route('/swap_records', methods=['GET'])
 def get_swap_records():
+    """
+    get the swap record both incoming and users own requests
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'User must be logged in to view'
                         ' swap requests'}), 401
@@ -463,6 +558,14 @@ def get_swap_records():
 
 @app.route('/mark_request_viewed', strict_slashes=False, methods=['POST'])
 def mark_request_viewed():
+    """
+    Marks all swap requests as viewed for the logged-in user.
+
+    Returns:
+        flask.Response: JSON response indicating success or failure.
+            - 200 OK: All requests marked as viewed.
+            - 401 Unauthorized: User must be logged in first.
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'User must be logged in first'}), 401
     user_id = session['user_id']
@@ -480,6 +583,23 @@ def mark_request_viewed():
 
 @app.route('/swap_request/<request_id>/<action>', methods=['POST'])
 def update_swap_request_status(request_id, action):
+    """
+    Updates the status of a swap request.
+
+    Args:
+        request_id (str): The ID of the swap request to update.
+        action (str): The action to perform on the swap request ('accept' or
+        'decline').
+
+    Returns:
+        flask.Response: JSON response indicating success or failure.
+            - 200 OK: Swap request accepted or declined successfully.
+            - 400 Bad Request: Invalid action.
+            - 401 Unauthorized: User must be logged in to update swap requests.
+            - 403 Forbidden: Unauthorized action.
+            - 404 Not Found: Swap request not found.
+            - 500 Internal Server Error: An error occurred during processing.
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'User must be logged in'
                         ' to update swap requests'}), 401
@@ -514,6 +634,20 @@ def update_swap_request_status(request_id, action):
 
 @app.route('/cancel_swap_request/<request_id>', methods=['DELETE'])
 def cancel_swap_request(request_id):
+    """
+    Cancels a swap request.
+
+    Args:
+        request_id (str): The ID of the swap request to cancel.
+
+    Returns:
+        flask.Response: JSON response indicating success or failure.
+            - 200 OK: Swap request cancelled successfully.
+            - 401 Unauthorized: User must be logged in.
+            - 403 Forbidden: User is not authorized to cancel this swap
+            request.
+            - 404 Not Found: Swap request not found.
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'user must be logged in'}), 401
 
@@ -534,6 +668,16 @@ def cancel_swap_request(request_id):
 
 @app.route('/home/messages', strict_slashes=False)
 def render_messages_html():
+    """
+    Renders the messages.html template with optional recipient_id parameter.
+
+    Query Parameters:
+        recipient_id (str): Optional. The ID of the recipient user.
+
+    Returns:
+        flask.Response: HTML response rendering messages.html template.
+            - Redirect to login page if user is not logged in.
+    """
     recipient_id = request.args.get('recipient_id', None)
     user_id = session.get('user_id')
 
@@ -562,6 +706,14 @@ def render_messages_html():
 
 @app.route('/fetch_chats', strict_slashes=False, methods=['GET'])
 def fetch_chats():
+    """
+    Fetches the list of chats (conversations) for the logged-in user.
+
+    Returns:
+        flask.Response: JSON response containing a list of chats.
+            - 200 OK: List of chats fetched successfully.
+            - 401 Unauthorized: User must be logged in to view chats.
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'User must be logged in to view chats'}), 401
 
@@ -593,6 +745,18 @@ def fetch_chats():
 
 @app.route('/fetch_messages/<chat_id>', methods=['GET'])
 def fetch_messages(chat_id):
+    """
+    Fetches messages for a specific chat/conversation.
+
+    Args:
+        chat_id (str): The ID of the chat to fetch messages for.
+
+    Returns:
+        flask.Response: JSON response containing the messages for the
+        specified chat.
+            - 200 OK: Messages fetched successfully.
+            - 401 Unauthorized: User must be logged in to view messages.
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'User must be logged'
                         ' in to view messages'}), 401
@@ -617,6 +781,23 @@ def fetch_messages(chat_id):
 
 @app.route('/send_message', methods=['POST'])
 def send_message():
+    """
+    Sends a message to a chat recipient.
+
+    Request JSON Body:
+        {
+            "chat_id": "recipient_user_id",
+            "content": "message_content"
+        }
+
+    Returns:
+        flask.Response: JSON response indicating success or failure.
+            - 200 OK: Message sent successfully.
+            - 400 Bad Request: Missing chat ID or message content.
+            - 401 Unauthorized: User must be logged in to send messages.
+            - 500 Internal Server Error: An error occurred while sending the
+            message.
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'User'
                         ' must be logged in to send messages'}), 401
@@ -650,12 +831,29 @@ def send_message():
 
 @app.route('/chat', strict_slashes=False)
 def render_chat_html():
+    """
+    Renders the chat.html template with optional recipient_id parameter.
+
+    Query Parameters:
+        recipient_id (str): Optional. The ID of the recipient user.
+
+    Returns:
+        flask.Response: HTML response rendering chat.html template.
+    """
     recipient_id = request.args.get('recipient_id')
     return render_template('chat.html', recipient_id=recipient_id)
 
 
 @app.route('/unread_message_count', strict_slashes=False, methods=['GET'])
 def unread_messages():
+    """
+    Retrieves the count of unread messages for the logged-in user.
+
+    Returns:
+        flask.Response: JSON response containing the count of unread messages.
+            - 200 OK: Unread message count retrieved successfully.
+            - 401 Unauthorized: User must be logged in first.
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'you need to be logged in first'}), 401
     user_id = session['user_id']
@@ -667,6 +865,16 @@ def unread_messages():
 
 @app.route('/mark_messages_as_read', strict_slashes=False, methods=['POST'])
 def mark_messages_read():
+    """
+    Marks all unread messages as read for the logged-in user.
+
+    Returns:
+        flask.Response: JSON response indicating success or failure.
+            - 200 OK: Messages marked as read successfully.
+            - 401 Unauthorized: User must be logged in first.
+            - 500 Internal Server Error: An error occurred while marking the
+            messages.
+    """
     if 'user_id' not in session:
         return jsonify({'error': 'You need to be logged in first'}), 401
     user_id = session['user_id']

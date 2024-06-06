@@ -1,12 +1,13 @@
 from models.base_model import BaseModel, Base
-import models
-from os import getenv
-import sqlalchemy
 from sqlalchemy import Column, String
 
 
 class User(BaseModel, Base):
-    """User class"""
+    """
+    User class for representing user entities in the Book Swap Connect project.
+
+    Inherits from BaseModel and Base.
+    """
     __tablename__ = 'users'
     email = Column(String(128), nullable=False, unique=True)
     password = Column(String(256), nullable=False)
@@ -14,8 +15,15 @@ class User(BaseModel, Base):
     last_name = Column(String(128), nullable=False)
 
     def __init__(self, email, password, first_name, last_name):
-        """Initialize the user with email, password, first name, and last
-        name."""
+        """
+        Initializes a new User instance.
+
+        Parameters:
+            email (str): The email address of the user.
+            password (str): The password of the user.
+            first_name (str): The first name of the user.
+            last_name (str): The last name of the user.
+        """
         super().__init__()
         self.email = email
         self.password = password
