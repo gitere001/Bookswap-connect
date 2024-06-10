@@ -7,8 +7,8 @@ BookSwap Connect is a web application designed to unite book enthusiasts, foster
 - **Final Project Blog Article**: [BookSwap Connect - Final Project](https://www.linkedin.com/posts/james-gitere_bookswap-connect-redefining-how-readers-activity-7205129375829209088-vwlP?utm_source=share&utm_medium=member_desktop)
 - **Author(s)**:
   - **James Mwangi Gitere**:
-    - [LinkedIn](linkedin.com/in/james-gitere)
-![BookSwap Connect Screenshot](/home/jamesgitere/Bookswap-connect/web_dynamic/static/images/screenshot.png.png)
+    - [LinkedIn](https://www.linkedin.com/in/james-gitere/)
+![BookSwap Connect Screenshot](/home/jamesgitere/Bookswap-connect/web_dynamic/static/images/screenshot.png)
 
 ## Installation
 To run BookSwap Connect locally, follow these steps:
