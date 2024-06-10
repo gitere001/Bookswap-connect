@@ -4,6 +4,11 @@
 BookSwap Connect is a web application designed to unite book enthusiasts, foster connections, and facilitate literary exchanges. Our platform allows users to share their love for books, connect with like-minded readers, and discover new literary works through book swapping and community engagement.
 ![BookSwap Connect Screenshot](screenshot.png)
 
+## About Me
+
+My name is James Mwangi Gitere, and I am a passionate software engineer with a love for literature and community building. I created BookSwap Connect to combine my technical skills with my passion for reading, and I hope it brings joy to fellow book enthusiasts.
+
+
 - **Deployed Site**: [BookSwap Connect](http://100.26.152.41/)
 - **Final Project Blog Article**: [BookSwap Connect - Final Project](https://www.linkedin.com/posts/james-gitere_bookswap-connect-redefining-how-readers-activity-7205129375829209088-vwlP?utm_source=share&utm_medium=member_desktop)
 - **Author(s)**:
